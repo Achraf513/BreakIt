@@ -1,4 +1,4 @@
-import 'package:break_it/addNewRule.dart';
+import 'package:break_it/Screens/addNewRule.dart';
 import 'package:flutter/material.dart';
 
 class RulesScreen extends StatefulWidget {

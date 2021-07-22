@@ -1,6 +1,6 @@
-import 'package:break_it/Shared.dart';
+import 'package:break_it/Models/Appdaily.dart';
+import 'package:break_it/Shared/Shared.dart';
 import 'package:flutter/material.dart';
-import 'package:app_usage/app_usage.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:intl/intl.dart';
 
@@ -13,7 +13,7 @@ class ActivitiesScreen extends StatefulWidget {
 
 class _ActivitiesScreenState extends State<ActivitiesScreen> {
   final _sharedData = SharedData();
-  DateTime dayFilter= DateTime.now().subtract(Duration(hours: DateTime.now().hour, minutes: DateTime.now().minute)).add(Duration(days: 1));
+  DateTime dayFilter= DateTime.now().subtract(Duration(hours: DateTime.now().hour, minutes: DateTime.now().minute));
   DateFormat dateFormat = DateFormat("yyyy-MM-dd");
   
   String getCategory(ApplicationCategory appCategory, bool isSysApp){
@@ -85,9 +85,9 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                         Expanded(
                           flex: 1,
                           child: GestureDetector(
-                            child: Icon(Icons.arrow_back_ios_new_rounded,color: Color(Shared.color_primaryViolet)),
+                            child:Icon(Icons.arrow_back_ios_new_rounded,color: dateFormat.format(dayFilter.subtract(Duration(days: 1)))!=dateFormat.format(DateTime.now().subtract(Duration(days: 6)))?Color(Shared.color_primaryViolet):Colors.grey,),
                             onTap: (){
-                              if(true){ // add only 7 days possible rotation
+                              if(dateFormat.format(dayFilter.subtract(Duration(days: 1)))!=dateFormat.format(DateTime.now().subtract(Duration(days: 6)))){ // add only 7 days possible rotation
                                 setState(() {
                                   dayFilter = dayFilter.subtract(Duration(days: 1));
                                 });
@@ -119,7 +119,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                   )
                 ),
                 FutureBuilder(
-                    future: _sharedData.getUsageStats(dayFilter.subtract(Duration(days: 1)),dayFilter),
+                    future: _sharedData.getDailyUsageStats(dayFilter),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
                         // If we got an error
@@ -134,12 +134,12 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                           // if we got our data
                         } else if (snapshot.hasData) {
                           // Extracting data from snapshot object
-                          final data = snapshot.data as List<AppUsageInfo>;
+                          final data = snapshot.data as List<AppDailyInfo>;
                           return Column(
-                              children: data.reversed
+                              children: data.reversed.where((element) => element.usageInMin>0)
                                   .map(
                                     (e) => FutureBuilder(
-                                        future: _sharedData.getIcon(e.packageName),
+                                        future: _sharedData.getIcon(e.appPackageName),
                                         builder: (context, snapshot) {
                                           if (snapshot.connectionState ==
                                               ConnectionState.done) {
@@ -266,7 +266,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                                   fontSize: 12,
                                                                 ),
                                                                 children: <TextSpan>[
-                                                                  TextSpan(text:  ((e.usage.inMinutes/_sharedData.totalUsage)*100).toStringAsFixed(2)+"%", style: TextStyle(fontWeight: FontWeight.w600)),
+                                                                  TextSpan(text:  e.usagePerc.toString()+"%", style: TextStyle(fontWeight: FontWeight.w600)),
                                                                 ],
                                                               ),
                                                             )
@@ -285,9 +285,9 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                                 ),
                                                                 children: <TextSpan>[
                                                                   TextSpan(text:  
-                                                                    (e.usage.inMinutes~/60) != 0?
-                                                                    (e.usage.inMinutes~/60).toString() +"h"+ ((e.usage.inMinutes%60)!=0? (e.usage.inMinutes%60).toString() +"min":""):
-                                                                    (e.usage.inMinutes%60).toString() +"min"
+                                                                    (e.usageInMin~/60) != 0?
+                                                                    (e.usageInMin~/60).toString() +"h"+ ((e.usageInMin%60)!=0? (e.usageInMin%60).toString() +"min":""):
+                                                                    (e.usageInMin%60).toString() +"min"
                                                                   
                                                                   , style: TextStyle(fontWeight: FontWeight.w600)),
                                                                 ],

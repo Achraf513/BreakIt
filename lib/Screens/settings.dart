@@ -1,4 +1,4 @@
-import 'package:break_it/Shared.dart';
+import 'package:break_it/Shared/Shared.dart';
 import 'package:flutter/material.dart';
 
 class SettingsScreen extends StatefulWidget {

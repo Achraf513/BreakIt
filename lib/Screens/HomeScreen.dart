@@ -1,8 +1,8 @@
-import 'package:break_it/Shared.dart';
-import 'package:break_it/dashboard.dart';
-import 'package:break_it/activities.dart';
-import 'package:break_it/rules.dart';
-import 'package:break_it/settings.dart';
+import 'package:break_it/Shared/Shared.dart';
+import 'package:break_it/Screens/dashboard2.dart';
+import 'package:break_it/Screens/Activities.dart';
+import 'package:break_it/Screens/rules.dart';
+import 'package:break_it/Screens/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 

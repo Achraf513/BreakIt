@@ -1,4 +1,4 @@
-import 'package:break_it/Shared.dart';
+import 'package:break_it/Shared/Shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
