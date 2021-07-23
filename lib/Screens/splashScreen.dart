@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({ Key? key }) : super(key: key);
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,7 +16,7 @@ class SplashScreen extends StatelessWidget {
           children: [
             Container(
               width: double.infinity,
-              height: MediaQuery.of(context).size.height/5,
+              height: MediaQuery.of(context).size.height/6.5,
               child: SvgPicture.asset(
                 "assets/icons/Logo.svg"
               ),
@@ -25,22 +25,22 @@ class SplashScreen extends StatelessWidget {
             Text(
               "BREAKIT",
               style: TextStyle(
-                fontSize: 35,
+                fontSize: 25,
                 fontWeight: FontWeight.w400,
                 fontFamily: "Yu Gothic UI",
                 color: Colors.white
               ),
             ),
-            SizedBox(height: 10,),
+            SizedBox(height: 5,),
             Text(
               "Break Free Of Your Addiction",
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 13,
                 fontWeight: FontWeight.w300,
                 fontFamily: "Yu Gothic UI",
                 color: Colors.white
               ),
-            )
+            ),
           ],
         ),
       ), 

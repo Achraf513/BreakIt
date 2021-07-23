@@ -1,5 +1,6 @@
 import 'package:app_usage/app_usage.dart';
 import 'package:break_it/Models/Appdaily.dart';
+import 'package:break_it/Models/generalData.dart';
 import 'package:break_it/Shared/database.dart';
 import 'package:device_apps/device_apps.dart';
 
@@ -86,9 +87,22 @@ class SharedData {
       DateTime day ) async {
     List<AppDailyInfo>? result = await DataBase.instance.readAppDailyInfo(day);
     if (result!=null){
-      return result;
+      Generaldata? lastCheck = await DataBase.instance.getLastCheckActivities();
+      if(lastCheck!=null){
+        if(DateTime.now().subtract(Duration(minutes: 10)).isAfter(DateTime.parse(lastCheck.data))){
+          await DataBase.instance.deleteTodaysAppDailyInfo();
+          await DataBase.instance.updateLastCheckActivities();
+          return createDailyUsageState(day);
+        } 
+      } 
+      return result; 
     } else {
-      int totalUsageLocal = 0;
+      return createDailyUsageState(day);
+    }
+  }
+
+  Future <List<AppDailyInfo>> createDailyUsageState(DateTime day) async{
+    int totalUsageLocal = 0;
       List<AppDailyInfo> result = [];
       try {
         List<AppUsageInfo> infos =
@@ -131,7 +145,6 @@ class SharedData {
         print(exception);
         return [];
       }
-    }
   }
 
 }

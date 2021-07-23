@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:app_usage/app_usage.dart';
 import 'package:break_it/Models/Weekly.dart';
+import 'package:break_it/Models/generalData.dart';
 import 'package:break_it/Shared/Shared.dart';
 import 'package:break_it/Shared/database.dart';
 import 'package:device_apps/device_apps.dart';
@@ -41,6 +42,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<String> getAvarageThisWeekCategory() async{
+    return "aa";
+  }
+
+  Future<String> getTodayCategory() async{
+    return "bb";
+  }
+
+  Future<String> getAvarageThisWeekTimeOn() async{
+    return "1h";
+  }
+
+  Future<String> getTodayTimeOn() async{
+    return _sharedData.totalUsage.toString();
+  }
+
+  Future updateTodaysData() async{
+    DateTime today = DateTime.now().subtract(Duration(hours: DateTime.now().hour, minutes: DateTime.now().minute));
+    List<AppUsageInfo> infos = await _sharedData.getUsageStats(
+      today,
+      today.add(Duration(days: 1)),
+      false
+    );
+    double totalUsageLocal = 0;
+    for (var app in infos) {
+      Application? moreDetails = await DeviceApps.getApp(app.packageName);
+      if (moreDetails != null) {
+        if (!moreDetails.systemApp) {
+          totalUsageLocal += app.usage.inMinutes;
+        }
+      }
+    }
+    totalUsageLocal = totalUsageLocal / 60 < 14
+        ? totalUsageLocal / 60
+        : 2 + Random().nextDouble() * 10;
+
+    WeeklyInfo? todaysWeeklyInfo = await DataBase.instance.getTodaysWeeklyInfo();
+
+    if(todaysWeeklyInfo!=null)
+    {
+      WeeklyInfo weeklyInfo = WeeklyInfo(
+        id: todaysWeeklyInfo.id,
+        idWeek: startOfthisWeek.day.toString() +
+            startOfthisWeek.month.toString() +
+            startOfthisWeek.add(Duration(days: 6)).day.toString() +
+            startOfthisWeek.add(Duration(days: 6)).month.toString() +
+            startOfthisWeek.year.toString(),
+        idDay: today.year.toString() +
+            today.month.toString() +
+            today.day.toString(),
+        dayUsage: totalUsageLocal,
+        pos: today.difference(startOfthisWeek).inDays.toDouble(),
+        mainCategory: "Unknown"
+      );
+      DataBase.instance.updateWeeklyInfo(weeklyInfo);
+    }
+  }
+
   Future<List<WeeklyInfo>> getWeeklyUsage() async {
     List<List<double>> weeklyUsage = [
       [0, 0],
@@ -56,9 +115,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
         startOfthisWeek.add(Duration(days: 6)).day.toString() +
         startOfthisWeek.add(Duration(days: 6)).month.toString() +
         startOfthisWeek.year.toString();
+    
     List<WeeklyInfo>? result = await DataBase.instance.readWeeklyInfo(idWeek);
     if (result != null) {
-      return result;
+      Generaldata? lastCheck = await DataBase.instance.getLastCheckDashBoard();
+      if(lastCheck!=null){
+        if(DateTime.now().subtract(Duration(minutes: 10)).isAfter(DateTime.parse(lastCheck.data))){
+          await updateTodaysData();
+          await DataBase.instance.updateLastCheckDashBoard();
+        } 
+      }
+      result = await DataBase.instance.readWeeklyInfo(idWeek);
+      if (result != null) {
+        return result;
+      } else return [];
     } else {
       result = [];
       for (var i = 0; i < 7; i++) {
@@ -91,9 +161,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             dayUsage: weeklyUsage[i][1],
             pos: weeklyUsage[i][0],
             mainCategory: "Unknown");
-
-        DataBase.instance.createWeeklyInfo(weeklyInfo);
-        result.add(weeklyInfo);
+        if(infos.length!=0){
+          DataBase.instance.createWeeklyInfo(weeklyInfo);
+          result.add(weeklyInfo);
+        }
       }
       return result;
     }
@@ -187,7 +258,184 @@ class _DashboardScreenState extends State<DashboardScreen> {
             SizedBox(
               height: 50,
             ),
-
+            FutureBuilder(
+                future: getWeeklyUsage(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                          '${snapshot.error} occured',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      );
+                    } else if (snapshot.hasData) {
+                      final data = snapshot.data as List<WeeklyInfo>;
+                      if(data.length == 0){
+                        return Center(
+                          child: Container(
+                            child: Column(
+                              children: [
+                                Text(
+                                  "Click refresh once you granted permession",
+                                  style: TextStyle(
+                                      color: Color(Shared.color_primaryViolet),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16),
+                                ),
+                                SizedBox(
+                                  height: 15,
+                                ),
+                                TextButton(
+                                    onPressed: () {
+                                      setState(() {});
+                                    },
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                          color:
+                                              Color(Shared.color_primaryViolet),
+                                          borderRadius:
+                                              BorderRadius.circular(20)),
+                                      width: 180,
+                                      height: 50,
+                                      child: Center(
+                                        child: Text(
+                                          "refresh",
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
+                                    ))
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                      return Container(
+                        margin: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                        width: double.infinity,
+                        height: 160,
+                        child: AbsorbPointer(
+                          absorbing: true,
+                          child: LineChart(LineChartData(
+                              gridData: FlGridData(
+                                show: true,
+                                getDrawingHorizontalLine: (value) {
+                                  return FlLine(
+                                      color: Color(Shared.color_secondaryGrey),
+                                      strokeWidth: 0.25);
+                                },
+                              ), //2mk6RpQJ
+                              borderData: FlBorderData(
+                                show: true,
+                                border: Border(
+                                  bottom: BorderSide(
+                                      width: 0.25,
+                                      color: Color(Shared.color_secondaryGrey)),
+                                  top: BorderSide(
+                                      width: 0.25,
+                                      color: Color(Shared.color_secondaryGrey)),
+                                ),
+                              ),
+                              //TO-DO make it dynamic
+                              minX: -1,
+                              maxX: 7,
+                              minY: 0,
+                              maxY: 8,
+                              titlesData: LineTitles.getTitleData(),
+                              lineBarsData: [
+                                LineChartBarData(
+                                    spots: data.map((e) {
+                                      return FlSpot(e.pos, e.dayUsage / 3);
+                                    }).toList(),
+                                    dotData: FlDotData(getDotPainter:
+                                        (FlSpot spot, double xPercentage,
+                                            LineChartBarData bar, int index,
+                                            {double? size}) {
+                                      return FlDotCirclePainter(
+                                        radius: size,
+                                        strokeWidth: 1.5,
+                                        color: Colors.white,
+                                        strokeColor:
+                                            Color(Shared.color_primaryViolet),
+                                      );
+                                    }),
+                                    isCurved: true,
+                                    belowBarData: BarAreaData(
+                                        show: true,
+                                        colors: [
+                                          Color(Shared.color_primaryViolet)
+                                              .withOpacity(0.05)
+                                        ]),
+                                    colors: [Color(Shared.color_primaryViolet)])
+                              ])),
+                        ),
+                      );
+                    } else {
+                      return Center(
+                          child: Container(
+                        height: 160,
+                        child: Center(
+                          child: Container(
+                            height: 150,
+                            width: 150,
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color(Shared.color_primaryViolet)),
+                            ),
+                          ),
+                        ),
+                      ));
+                    }
+                  } else {
+                    return Center(
+                        child: Container(
+                      height: 160,
+                      child: Center(
+                        child: Container(
+                          height: 150,
+                          width: 150,
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Color(Shared.color_primaryViolet)),
+                          ),
+                        ),
+                      ),
+                    ));
+                  }
+                }),
+          Column(
+            children: [
+              //General Data
+              //General Data
+              SizedBox(
+                height: 60,
+              ),
+              Divider(
+                thickness: 1,
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              drawGenerals(
+                "TODAY'S STATES",
+                getTodayCategory(),
+                getTodayTimeOn()
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              drawGenerals(
+                "AVERAGE THIS WEEK",
+                getAvarageThisWeekCategory(),
+                getAvarageThisWeekTimeOn()
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Divider(
+                thickness: 1,
+              ),]
+            ),
             FutureBuilder(
                 future: _sharedData.getUsageStats(
                     dayFilter.subtract(Duration(days: 1)), dayFilter, true),
@@ -214,7 +462,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   100)
                               .round();
                         }
-                        List<List<int>> appsData = [
+                        appsData = [
                           [
                             Shared.pieChartColor_blue,
                             ((data[data.length - 1].usage.inMinutes /
@@ -246,220 +494,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           [Shared.pieChartColor_green, other]
                         ];
                       } else {
-                        return Center(
-                          child: Container(
-                            child: Column(
-                              children: [
-                                Text(
-                                  "Click refresh once you granted permession",
-                                  style: TextStyle(color: Color(Shared.color_primaryViolet),
-                                  fontWeight: FontWeight.w600, fontSize: 16),
-                                ),
-                                SizedBox(height: 15,),
-                                TextButton(
-                                    onPressed: () {
-                                      setState(() {});
-                                    },
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Color(Shared.color_primaryViolet),
-                                        borderRadius: BorderRadius.circular(20)
-                                      ),
-                                      width: 180,
-                                      height: 50,
-                                      child: Center(
-                                        child: Text(
-                                          "refresh",
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                      ),
-                                    ))
-                              ],
-                            ),
-                          ),
-                        );
+                        return SizedBox();
                       }
-                      return Column(
-                        children: [
-                          FutureBuilder(
-                              future: getWeeklyUsage(),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.done) {
-                                  if (snapshot.hasError) {
-                                    return Center(
-                                      child: Text(
-                                        '${snapshot.error} occured',
-                                        style: TextStyle(fontSize: 18),
-                                      ),
-                                    );
-                                  } else if (snapshot.hasData) {
-                                    final data =
-                                        snapshot.data as List<WeeklyInfo>;
-                                    return Container(
-                                      margin: EdgeInsets.fromLTRB(0, 0, 5, 0),
-                                      width: double.infinity,
-                                      height: 160,
-                                      child: AbsorbPointer(
-                                        absorbing: true,
-                                        child: LineChart(LineChartData(
-                                            gridData: FlGridData(
-                                              show: true,
-                                              getDrawingHorizontalLine:
-                                                  (value) {
-                                                return FlLine(
-                                                    color: Color(Shared
-                                                        .color_secondaryGrey),
-                                                    strokeWidth: 0.25);
-                                              },
-                                            ), //2mk6RpQJ
-                                            borderData: FlBorderData(
-                                              show: true,
-                                              border: Border(
-                                                bottom: BorderSide(
-                                                    width: 0.25,
-                                                    color: Color(Shared
-                                                        .color_secondaryGrey)),
-                                                top: BorderSide(
-                                                    width: 0.25,
-                                                    color: Color(Shared
-                                                        .color_secondaryGrey)),
-                                              ),
-                                            ),
-                                            //TO-DO make it dynamic
-                                            minX: -1,
-                                            maxX: 7,
-                                            minY: 0,
-                                            maxY: 8,
-                                            titlesData:
-                                                LineTitles.getTitleData(),
-                                            lineBarsData: [
-                                              LineChartBarData(
-                                                  spots: data.map((e) {
-                                                    return FlSpot(
-                                                        e.pos, e.dayUsage / 3);
-                                                  }).toList(),
-                                                  dotData: FlDotData(
-                                                      getDotPainter: (FlSpot
-                                                              spot,
-                                                          double xPercentage,
-                                                          LineChartBarData bar,
-                                                          int index,
-                                                          {double? size}) {
-                                                    return FlDotCirclePainter(
-                                                      radius: size,
-                                                      strokeWidth: 1.5,
-                                                      color: Colors.white,
-                                                      strokeColor: Color(Shared
-                                                          .color_primaryViolet),
-                                                    );
-                                                  }),
-                                                  isCurved: true,
-                                                  belowBarData: BarAreaData(
-                                                      show: true,
-                                                      colors: [
-                                                        Color(Shared
-                                                                .color_primaryViolet)
-                                                            .withOpacity(0.05)
-                                                      ]),
-                                                  colors: [
-                                                    Color(Shared
-                                                        .color_primaryViolet)
-                                                  ])
-                                            ])),
-                                      ),
-                                    );
-                                  } else {
-                                    return Center(
-                                        child: Container(
-                                      height:
-                                          MediaQuery.of(context).size.height /
-                                              5,
-                                      child: Center(
-                                        child: Container(
-                                          height: MediaQuery.of(context)
-                                                  .size
-                                                  .width /
-                                              3,
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width /
-                                              3,
-                                          child: CircularProgressIndicator(
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                                    Color(Shared
-                                                        .color_primaryViolet)),
-                                          ),
-                                        ),
-                                      ),
-                                    ));
-                                  }
-                                } else {
-                                  return Center(
-                                      child: Container(
-                                    height:
-                                        MediaQuery.of(context).size.height / 5,
-                                    child: Center(
-                                      child: Container(
-                                        height:
-                                            MediaQuery.of(context).size.width /
-                                                3,
-                                        width:
-                                            MediaQuery.of(context).size.width /
-                                                3,
-                                        child: CircularProgressIndicator(
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                  Color(Shared
-                                                      .color_primaryViolet)),
-                                        ),
-                                      ),
-                                    ),
-                                  ));
-                                }
-                              }),
-
-                          //General Data
-                          //General Data
-                          SizedBox(
-                            height: 60,
-                          ),
-                          Divider(
-                            thickness: 1,
-                          ),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          drawGenerals(
-                              "TODAY",
-                              "35 Times",
-                              (_sharedData.totalUsageWithoutSystem ~/ 60) != 0
-                                  ? (_sharedData.totalUsageWithoutSystem ~/ 60)
-                                          .toString() +
-                                      "h" +
-                                      ((_sharedData.totalUsageWithoutSystem %
-                                                  60) !=
-                                              0
-                                          ? (_sharedData.totalUsageWithoutSystem %
-                                                      60)
-                                                  .toString() +
-                                              "min"
-                                          : "")
-                                  : (_sharedData.totalUsageWithoutSystem % 60)
-                                          .toString() +
-                                      "min"),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          drawGenerals("AVERAGE", "42 Times", "5h 43min"),
-                          SizedBox(
-                            height: 20,
-                          ),
-                          Divider(
-                            thickness: 1,
-                          ),
-
+                      return Column(children: [ 
                           //Pie-Chart
                           //Pie-Chart
                           //TO-DO : make it dynamic
@@ -697,7 +734,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ));
   }
 
-  Column drawGenerals(String title, String timesUnlocked, String timeOn) {
+  Column drawGenerals(String title, Future<String> futureCategory, Future<String> futureTimeOn) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -733,21 +770,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Screen unlocked",
+                          "Category",
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               fontFamily: "Yu Gothic UI",
                               color: Color(Shared.color_primaryViolet)),
                         ),
-                        Text(
-                          timesUnlocked,
-                          style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: "Yu Gothic UI",
-                              color: Color(Shared.color_secondaryGrey)),
+                        FutureBuilder(
+                          future: futureCategory,
+                          builder: (context, snapshot){
+                            if(snapshot.connectionState == ConnectionState.done){
+                              if(snapshot.hasData){
+                                return Text(
+                                  snapshot.data as String,
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: "Yu Gothic UI",
+                                      color: Color(Shared.color_secondaryGrey)),
+                                );
+                              } else{
+                                return Center(
+                                  child: Container(
+                                    height: 25,
+                                    child: Center(
+                                      child: Container(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          valueColor: AlwaysStoppedAnimation<Color>(
+                                              Color(Shared.color_primaryViolet)),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                );
+                              }
+                            } else {
+                              return Center(
+                                child: Container(
+                                  height: 25,
+                                  child: Center(
+                                    child: Container(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                            Color(Shared.color_primaryViolet)),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              );
+                            }
+                          }
                         ),
+                        
                       ],
                     )
                   ],
@@ -782,13 +861,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               fontFamily: "Yu Gothic UI",
                               color: Color(Shared.color_primaryViolet)),
                         ),
-                        Text(
-                          timeOn,
-                          style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: "Yu Gothic UI",
-                              color: Color(Shared.color_secondaryGrey)),
+                        FutureBuilder(
+                          future: futureTimeOn,
+                          builder: (context, snapshot){
+                            if(snapshot.connectionState == ConnectionState.done){
+                              if(snapshot.hasData){
+                                return Text(
+                                  snapshot.data as String,
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: "Yu Gothic UI",
+                                      color: Color(Shared.color_secondaryGrey)),
+                                );
+                              } else{
+                                return Center(
+                                  child: Container(
+                                    height: 25,
+                                    child: Center(
+                                      child: Container(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          valueColor: AlwaysStoppedAnimation<Color>(
+                                              Color(Shared.color_primaryViolet)),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                );
+                              }
+                            } else {
+                              return Center(
+                                child: Container(
+                                  height: 25,
+                                  child: Center(
+                                    child: Container(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                            Color(Shared.color_primaryViolet)),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              );
+                            }
+                          }
                         ),
                       ],
                     )

@@ -1,3 +1,4 @@
+import 'package:break_it/Models/generalData.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:break_it/Models/Appdaily.dart';
 import 'package:break_it/Models/Weekly.dart';
@@ -51,6 +52,59 @@ CREATE TABLE $tableWeeklyInfo (
 )
 """
     );
+    await db.execute(
+"""
+CREATE TABLE $tableGeneraldata (
+  ${GeneraldataFields.id} $idType,
+  ${GeneraldataFields.title} $stringType,
+  ${GeneraldataFields.data} $stringType
+)
+"""
+    );
+    //creating last check Activities
+    await db.insert(tableGeneraldata, Generaldata(title: "LastCheckActivities", data: DateTime.now().subtract(Duration(minutes: 10)).toString()).toJson());
+    //creating last check DashBoard
+    await db.insert(tableGeneraldata, Generaldata(title: "LastCheckDashBoard", data: DateTime.now().subtract(Duration(minutes: 10)).toString()).toJson());
+    //creating AverageCategory
+    await db.insert(tableGeneraldata, Generaldata(title: "AverageCategory", data: "None").toJson());
+    //creating AverageTimeOn
+    await db.insert(tableGeneraldata, Generaldata(title: "AverageTimeOn", data: "0").toJson());
+    //creating TodayCategory
+    await db.insert(tableGeneraldata, Generaldata(title: "TodayCategory", data: "None").toJson());
+    //creating TodayTimeOn
+    await db.insert(tableGeneraldata, Generaldata(title: "TodayTimeOn", data: "0").toJson());
+  }
+  
+  Future<Generaldata?> getLastCheckActivities() async{
+    final String title = "LastCheckActivities";
+    final db = await instance.database;
+    final results = await db.query(
+      tableGeneraldata,
+      columns: GeneraldataFields.values,
+      where: "${GeneraldataFields.title} = ?",
+      whereArgs: [title],
+    );
+    if(results.isNotEmpty){
+      return Generaldata.fromJson(results.first);
+    } else {
+      return null;
+    }
+  }
+
+  Future<Generaldata?> getLastCheckDashBoard() async{
+    final String title = "LastCheckDashBoard";
+    final db = await instance.database;
+    final results = await db.query(
+      tableGeneraldata,
+      columns: GeneraldataFields.values,
+      where: "${GeneraldataFields.title} = ?",
+      whereArgs: [title],
+    );
+    if(results.isNotEmpty){
+      return Generaldata.fromJson(results.first);
+    } else {
+      return null;
+    }
   }
 
   Future<AppDailyInfo> createAppDailyInfo(AppDailyInfo appDailyInfo) async{
@@ -59,7 +113,7 @@ CREATE TABLE $tableWeeklyInfo (
     return appDailyInfo.copy(id : id);
   }
 
-    Future<WeeklyInfo> createWeeklyInfo(WeeklyInfo weeklyInfo) async{
+  Future<WeeklyInfo> createWeeklyInfo(WeeklyInfo weeklyInfo) async{
     final db = await instance.database;
     final id = await db.insert(tableWeeklyInfo, weeklyInfo.toJson());
     return weeklyInfo.copy(id : id);
@@ -98,6 +152,24 @@ CREATE TABLE $tableWeeklyInfo (
     }
   }
 
+  Future<WeeklyInfo?> getTodaysWeeklyInfo() async{
+    final db = await instance.database;
+    DateTime today = DateTime.now();
+    String idDay = today.year.toString()+today.month.toString()+today.day.toString();
+    final results = await db.query(
+      tableWeeklyInfo,
+      columns: WeeklyInfoFields.values,
+      where: "${WeeklyInfoFields.idDay} = ?",
+      whereArgs: [idDay],
+      orderBy: "${WeeklyInfoFields.pos} ASC"
+    );
+    if(results.isNotEmpty){
+      return WeeklyInfo.fromJson(results.first);
+    } else {
+      return null;
+    }
+  }
+
   Future<int> updateAppDailyInfo(AppDailyInfo appDailyInfo) async{
     final db = await instance.database;
     return db.update(
@@ -106,6 +178,34 @@ CREATE TABLE $tableWeeklyInfo (
       where: "${AppDailyInfoFields.id} = ?",
       whereArgs :[appDailyInfo.id]
     );
+  }
+
+  Future updateLastCheckActivities()async{
+    final db = await instance.database;
+    final Generaldata? generalData = await getLastCheckActivities();
+    if(generalData!=null){
+      Generaldata newGeneralData = generalData.copy(data :  DateTime.now().toString());
+      return db.update(
+        tableGeneraldata, 
+        newGeneralData.toJson(),
+        where: "${GeneraldataFields.id} = ?",
+        whereArgs :[newGeneralData.id]
+      );
+    }
+  }
+
+  Future updateLastCheckDashBoard()async{
+    final db = await instance.database;
+    final Generaldata? generalData = await getLastCheckDashBoard();
+    if(generalData!=null){
+      Generaldata newGeneralData = generalData.copy(data :  DateTime.now().toString());
+      return db.update(
+        tableGeneraldata, 
+        newGeneralData.toJson(),
+        where: "${GeneraldataFields.id} = ?",
+        whereArgs :[newGeneralData.id]
+      );
+    }
   }
 
   Future<int> updateWeeklyInfo(WeeklyInfo weeklyInfo) async{
@@ -124,6 +224,16 @@ CREATE TABLE $tableWeeklyInfo (
       tableAppDailyInfo,
       where: "${AppDailyInfoFields.id} = ?",
       whereArgs :[id]
+    );
+  }
+
+  Future<int> deleteTodaysAppDailyInfo() async{
+    final String idDay = DateTime.now().year.toString()+DateTime.now().month.toString()+DateTime.now().day.toString();
+    final db = await instance.database;
+    return db.delete(
+      tableAppDailyInfo,
+      where: "${AppDailyInfoFields.date} = ?",
+      whereArgs :[idDay]
     );
   }
 
