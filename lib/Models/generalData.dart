@@ -5,8 +5,13 @@ class GeneraldataFields{
   static final values = [ id, title, data ];
 
   static final String id = "_id";
-  static final String title = "title"; // TimeOn, Category, LastCheck
-  static final String data = "data"; // if TimeOn : (time in minutes).toString()  , if Category : Category.toString() , LastCheck : DateTime.toString()
+  static final String title = "title"; 
+    // TimeOn, Category, LastCheck, PermessionGranted
+  static final String data = "data"; 
+    //if TimeOn : (time in minutes).toString()  , 
+    //if Category : Category.toString() , 
+    //if LastCheck : DateTime.toString()
+    //if PermessionGranted : boolean.toString()
 }
 
 class Generaldata {

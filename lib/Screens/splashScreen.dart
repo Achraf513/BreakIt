@@ -14,12 +14,20 @@ class SplashScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: double.infinity,
-              height: MediaQuery.of(context).size.height/6.5,
-              child: SvgPicture.asset(
-                "assets/icons/Logo.svg"
-              ),
+            Center(
+              child: Container(
+                height: MediaQuery.of(context).size.height / 4,
+                child: Center(
+                  child: Container(
+                    height: MediaQuery.of(context).size.width / 3,
+                    width: MediaQuery.of(context).size.width / 3,
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.white),
+                    ),
+                  ),
+                ),
+              )
             ),
             SizedBox(height: 10,),
             Text(

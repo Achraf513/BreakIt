@@ -73,8 +73,26 @@ CREATE TABLE $tableGeneraldata (
     await db.insert(tableGeneraldata, Generaldata(title: "TodayCategory", data: "None").toJson());
     //creating TodayTimeOn
     await db.insert(tableGeneraldata, Generaldata(title: "TodayTimeOn", data: "0").toJson());
+    //creating TodayTimeOn
+    await db.insert(tableGeneraldata, Generaldata(title: "PermessionGranted", data: "false").toJson());
   }
   
+  Future<Generaldata?> getPermessionGranted() async {
+    final String title = "PermessionGranted";
+    final db = await instance.database;
+    final results = await db.query(
+      tableGeneraldata,
+      columns: GeneraldataFields.values,
+      where: "${GeneraldataFields.title} = ?",
+      whereArgs: [title],
+    );
+    if(results.isNotEmpty){
+      return Generaldata.fromJson(results.first);
+    } else {
+      return null;
+    }
+  }
+
   Future<Generaldata?> getLastCheckActivities() async{
     final String title = "LastCheckActivities";
     final db = await instance.database;
@@ -178,6 +196,20 @@ CREATE TABLE $tableGeneraldata (
       where: "${AppDailyInfoFields.id} = ?",
       whereArgs :[appDailyInfo.id]
     );
+  }
+
+   Future updatePermessionGranted()async{
+    final db = await instance.database;
+    final Generaldata? generalData = await getPermessionGranted();
+    if(generalData!=null){
+      Generaldata newGeneralData = generalData.copy(data :  "true");
+      return db.update(
+        tableGeneraldata, 
+        newGeneralData.toJson(),
+        where: "${GeneraldataFields.id} = ?",
+        whereArgs :[newGeneralData.id]
+      );
+    }
   }
 
   Future updateLastCheckActivities()async{

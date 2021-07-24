@@ -42,29 +42,74 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Future<String> getAvarageThisWeekCategory() async{
+  Future<String> getAvarageThisWeekCategory() async {
     return "aa";
   }
 
-  Future<String> getTodayCategory() async{
+  Future<String> getTodayCategory() async {
     return "bb";
   }
 
-  Future<String> getAvarageThisWeekTimeOn() async{
-    return "1h";
+  Future<String> getAvarageThisWeekTimeOn() async {
+
+    DateTime now = DateTime.now();
+    DateTime startOfthisWeek = now
+        .subtract(Duration(hours: now.hour, minutes: now.minute));
+    while (startOfthisWeek.weekday != DateTime.monday) {
+      startOfthisWeek = startOfthisWeek.subtract(Duration(days: 1));
+    }
+
+    String idWeek = startOfthisWeek.day.toString() +
+        startOfthisWeek.month.toString() +
+        startOfthisWeek.add(Duration(days: 6)).day.toString() +
+        startOfthisWeek.add(Duration(days: 6)).month.toString() +
+        startOfthisWeek.year.toString();
+
+    List<WeeklyInfo>? result = await DataBase.instance.readWeeklyInfo(idWeek);
+    if (result != null ) {
+      if(result.last.pos == DateTime.now().difference(startOfthisWeek).inDays){
+        int totalUsage = 0;
+        for (var weeklyInfo in result) {
+            int usage = (weeklyInfo.dayUsage * 60).toInt();
+            totalUsage += usage;
+        }
+        totalUsage = totalUsage~/result.length;
+        int totalHours = (totalUsage ~/ 60);
+        int totalMinutes = totalUsage - (totalUsage ~/ 60) * 60;
+        String hoursText = totalHours != 0 ? totalHours.toString() + "h" : "";
+        String minutesText = totalMinutes != 0 ? totalMinutes.toString() + "min" : "";
+        return hoursText + minutesText;
+      } else{
+        Future.delayed(Duration(seconds: 3));
+        return getAvarageThisWeekTimeOn(); 
+      }
+    } else {
+      Future.delayed(Duration(seconds: 3));
+      return getAvarageThisWeekTimeOn();
+    }
   }
 
-  Future<String> getTodayTimeOn() async{
-    return _sharedData.totalUsage.toString();
+  Future<String> getTodayTimeOn() async {
+    WeeklyInfo? todaysWeeklyInfo =
+        await DataBase.instance.getTodaysWeeklyInfo();
+    if (todaysWeeklyInfo != null) {
+      int usage = (todaysWeeklyInfo.dayUsage * 60).toInt();
+      int hours = usage ~/ 60;
+      int minutes = usage - (usage ~/ 60) * 60;
+      String hoursText = hours != 0 ? hours.toString() + "h" : "";
+      String minutesText = minutes != 0 ? minutes.toString() + "min" : "";
+      return hoursText + minutesText;
+    } else {
+      Future.delayed(Duration(seconds: 3));
+      return getTodayTimeOn();
+    }
   }
 
-  Future updateTodaysData() async{
-    DateTime today = DateTime.now().subtract(Duration(hours: DateTime.now().hour, minutes: DateTime.now().minute));
+  Future updateTodaysData() async {
+    DateTime today = DateTime.now().subtract(
+        Duration(hours: DateTime.now().hour, minutes: DateTime.now().minute));
     List<AppUsageInfo> infos = await _sharedData.getUsageStats(
-      today,
-      today.add(Duration(days: 1)),
-      false
-    );
+        today, today.add(Duration(days: 1)), false);
     double totalUsageLocal = 0;
     for (var app in infos) {
       Application? moreDetails = await DeviceApps.getApp(app.packageName);
@@ -78,24 +123,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ? totalUsageLocal / 60
         : 2 + Random().nextDouble() * 10;
 
-    WeeklyInfo? todaysWeeklyInfo = await DataBase.instance.getTodaysWeeklyInfo();
+    WeeklyInfo? todaysWeeklyInfo =
+        await DataBase.instance.getTodaysWeeklyInfo();
 
-    if(todaysWeeklyInfo!=null)
-    {
+    if (todaysWeeklyInfo != null) {
       WeeklyInfo weeklyInfo = WeeklyInfo(
-        id: todaysWeeklyInfo.id,
-        idWeek: startOfthisWeek.day.toString() +
-            startOfthisWeek.month.toString() +
-            startOfthisWeek.add(Duration(days: 6)).day.toString() +
-            startOfthisWeek.add(Duration(days: 6)).month.toString() +
-            startOfthisWeek.year.toString(),
-        idDay: today.year.toString() +
-            today.month.toString() +
-            today.day.toString(),
-        dayUsage: totalUsageLocal,
-        pos: today.difference(startOfthisWeek).inDays.toDouble(),
-        mainCategory: "Unknown"
-      );
+          id: todaysWeeklyInfo.id,
+          idWeek: startOfthisWeek.day.toString() +
+              startOfthisWeek.month.toString() +
+              startOfthisWeek.add(Duration(days: 6)).day.toString() +
+              startOfthisWeek.add(Duration(days: 6)).month.toString() +
+              startOfthisWeek.year.toString(),
+          idDay: today.year.toString() +
+              today.month.toString() +
+              today.day.toString(),
+          dayUsage: totalUsageLocal,
+          pos: todaysWeeklyInfo.pos,
+          mainCategory: "Unknown");
       DataBase.instance.updateWeeklyInfo(weeklyInfo);
     }
   }
@@ -115,20 +159,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
         startOfthisWeek.add(Duration(days: 6)).day.toString() +
         startOfthisWeek.add(Duration(days: 6)).month.toString() +
         startOfthisWeek.year.toString();
-    
+
     List<WeeklyInfo>? result = await DataBase.instance.readWeeklyInfo(idWeek);
     if (result != null) {
       Generaldata? lastCheck = await DataBase.instance.getLastCheckDashBoard();
-      if(lastCheck!=null){
-        if(DateTime.now().subtract(Duration(minutes: 10)).isAfter(DateTime.parse(lastCheck.data))){
+      if (lastCheck != null) {
+        if (DateTime.now()
+            .subtract(Duration(minutes: 10))
+            .isAfter(DateTime.parse(lastCheck.data))) {
           await updateTodaysData();
           await DataBase.instance.updateLastCheckDashBoard();
-        } 
+        }
       }
       result = await DataBase.instance.readWeeklyInfo(idWeek);
       if (result != null) {
         return result;
-      } else return [];
+      } else
+        return [];
     } else {
       result = [];
       for (var i = 0; i < 7; i++) {
@@ -161,7 +208,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             dayUsage: weeklyUsage[i][1],
             pos: weeklyUsage[i][0],
             mainCategory: "Unknown");
-        if(infos.length!=0){
+        if (infos.length != 0) {
           DataBase.instance.createWeeklyInfo(weeklyInfo);
           result.add(weeklyInfo);
         }
@@ -271,45 +318,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       );
                     } else if (snapshot.hasData) {
                       final data = snapshot.data as List<WeeklyInfo>;
-                      if(data.length == 0){
-                        return Center(
-                          child: Container(
-                            child: Column(
-                              children: [
-                                Text(
-                                  "Click refresh once you granted permession",
-                                  style: TextStyle(
-                                      color: Color(Shared.color_primaryViolet),
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16),
-                                ),
-                                SizedBox(
-                                  height: 15,
-                                ),
-                                TextButton(
-                                    onPressed: () {
-                                      setState(() {});
-                                    },
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                          color:
-                                              Color(Shared.color_primaryViolet),
-                                          borderRadius:
-                                              BorderRadius.circular(20)),
-                                      width: 180,
-                                      height: 50,
-                                      child: Center(
-                                        child: Text(
-                                          "refresh",
-                                          style: TextStyle(color: Colors.white),
-                                        ),
-                                      ),
-                                    ))
-                              ],
-                            ),
-                          ),
-                        );
-                      }
                       return Container(
                         margin: EdgeInsets.fromLTRB(0, 0, 5, 0),
                         width: double.infinity,
@@ -403,8 +411,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ));
                   }
                 }),
-          Column(
-            children: [
+            Column(children: [
               //General Data
               //General Data
               SizedBox(
@@ -417,25 +424,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 height: 20,
               ),
               drawGenerals(
-                "TODAY'S STATES",
-                getTodayCategory(),
-                getTodayTimeOn()
-              ),
+                  "TODAY'S STATES", getTodayCategory(), getTodayTimeOn()),
               SizedBox(
                 height: 20,
               ),
-              drawGenerals(
-                "AVERAGE THIS WEEK",
-                getAvarageThisWeekCategory(),
-                getAvarageThisWeekTimeOn()
-              ),
+              drawGenerals("AVERAGE THIS WEEK", getAvarageThisWeekCategory(),
+                  getAvarageThisWeekTimeOn()),
               SizedBox(
                 height: 20,
               ),
               Divider(
                 thickness: 1,
-              ),]
-            ),
+              ),
+            ]),
             FutureBuilder(
                 future: _sharedData.getUsageStats(
                     dayFilter.subtract(Duration(days: 1)), dayFilter, true),
@@ -449,7 +450,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           style: TextStyle(fontSize: 18),
                         ),
                       );
-
                       // if we got our data
                     } else if (snapshot.hasData) {
                       final data = snapshot.data as List<AppUsageInfo>;
@@ -496,7 +496,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       } else {
                         return SizedBox();
                       }
-                      return Column(children: [ 
+                      return Column(
+                        children: [
                           //Pie-Chart
                           //Pie-Chart
                           //TO-DO : make it dynamic
@@ -559,10 +560,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                       return Text(app.appName);
                                                     } else {
                                                       return Text(
-                                                          "Loading ...");
+                                                          data[data.length - 1].appName);
                                                     }
                                                   } else {
-                                                    return Text("Loading ...");
+                                                    return Text( data[data.length - 1].appName);
                                                   }
                                                 })
                                           ],
@@ -594,10 +595,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                       return Text(app.appName);
                                                     } else {
                                                       return Text(
-                                                          "Loading ...");
+                                                          data[data.length - 2].appName);
                                                     }
                                                   } else {
-                                                    return Text("Loading ...");
+                                                    return Text(data[data.length - 2].appName);
                                                   }
                                                 })
                                           ],
@@ -629,10 +630,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                       return Text(app.appName);
                                                     } else {
                                                       return Text(
-                                                          "Loading ...");
+                                                         data[data.length - 3].appName);
                                                     }
                                                   } else {
-                                                    return Text("Loading ...");
+                                                    return Text(data[data.length - 3].appName);
                                                   }
                                                 })
                                           ],
@@ -664,10 +665,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                       return Text(app.appName);
                                                     } else {
                                                       return Text(
-                                                          "Loading ...");
+                                                          data[data.length - 4].appName);
                                                     }
                                                   } else {
-                                                    return Text("Loading ...");
+                                                    return Text(data[data.length - 4].appName);
                                                   }
                                                 })
                                           ],
@@ -734,7 +735,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ));
   }
 
-  Column drawGenerals(String title, Future<String> futureCategory, Future<String> futureTimeOn) {
+  Column drawGenerals(String title, Future<String> futureCategory,
+      Future<String> futureTimeOn) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -778,55 +780,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               color: Color(Shared.color_primaryViolet)),
                         ),
                         FutureBuilder(
-                          future: futureCategory,
-                          builder: (context, snapshot){
-                            if(snapshot.connectionState == ConnectionState.done){
-                              if(snapshot.hasData){
-                                return Text(
-                                  snapshot.data as String,
-                                  style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      fontFamily: "Yu Gothic UI",
-                                      color: Color(Shared.color_secondaryGrey)),
-                                );
-                              } else{
-                                return Center(
-                                  child: Container(
+                            future: futureCategory,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.done) {
+                                if (snapshot.hasData) {
+                                  return Text(
+                                    snapshot.data as String,
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: "Yu Gothic UI",
+                                        color:
+                                            Color(Shared.color_secondaryGrey)),
+                                  );
+                                } else {
+                                  return Center(
+                                      child: Container(
                                     height: 25,
                                     child: Center(
                                       child: Container(
                                         height: 20,
                                         width: 20,
                                         child: CircularProgressIndicator(
-                                          valueColor: AlwaysStoppedAnimation<Color>(
-                                              Color(Shared.color_primaryViolet)),
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Color(Shared
+                                                      .color_primaryViolet)),
                                         ),
                                       ),
                                     ),
-                                  )
-                                );
-                              }
-                            } else {
-                              return Center(
-                                child: Container(
+                                  ));
+                                }
+                              } else {
+                                return Center(
+                                    child: Container(
                                   height: 25,
                                   child: Center(
                                     child: Container(
                                       height: 20,
                                       width: 20,
                                       child: CircularProgressIndicator(
-                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                        valueColor: AlwaysStoppedAnimation<
+                                                Color>(
                                             Color(Shared.color_primaryViolet)),
                                       ),
                                     ),
                                   ),
-                                )
-                              );
-                            }
-                          }
-                        ),
-                        
+                                ));
+                              }
+                            }),
                       ],
                     )
                   ],
@@ -862,54 +865,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               color: Color(Shared.color_primaryViolet)),
                         ),
                         FutureBuilder(
-                          future: futureTimeOn,
-                          builder: (context, snapshot){
-                            if(snapshot.connectionState == ConnectionState.done){
-                              if(snapshot.hasData){
-                                return Text(
-                                  snapshot.data as String,
-                                  style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      fontFamily: "Yu Gothic UI",
-                                      color: Color(Shared.color_secondaryGrey)),
-                                );
-                              } else{
-                                return Center(
-                                  child: Container(
+                            future: futureTimeOn,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.done) {
+                                if (snapshot.hasData) {
+                                  return Text(
+                                    snapshot.data as String,
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: "Yu Gothic UI",
+                                        color:
+                                            Color(Shared.color_secondaryGrey)),
+                                  );
+                                } else {
+                                  return Center(
+                                      child: Container(
                                     height: 25,
                                     child: Center(
                                       child: Container(
                                         height: 20,
                                         width: 20,
                                         child: CircularProgressIndicator(
-                                          valueColor: AlwaysStoppedAnimation<Color>(
-                                              Color(Shared.color_primaryViolet)),
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Color(Shared
+                                                      .color_primaryViolet)),
                                         ),
                                       ),
                                     ),
-                                  )
-                                );
-                              }
-                            } else {
-                              return Center(
-                                child: Container(
+                                  ));
+                                }
+                              } else {
+                                return Center(
+                                    child: Container(
                                   height: 25,
                                   child: Center(
                                     child: Container(
                                       height: 20,
                                       width: 20,
                                       child: CircularProgressIndicator(
-                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                        valueColor: AlwaysStoppedAnimation<
+                                                Color>(
                                             Color(Shared.color_primaryViolet)),
                                       ),
                                     ),
                                   ),
-                                )
-                              );
-                            }
-                          }
-                        ),
+                                ));
+                              }
+                            }),
                       ],
                     )
                   ],

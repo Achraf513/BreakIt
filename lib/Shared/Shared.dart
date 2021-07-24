@@ -18,6 +18,7 @@ class Shared {
 
 class SharedData {
   static final SharedData _sharedData = new SharedData._internal();
+  bool permessionGranted = false;
   int totalUsage = 0;
   int totalUsageWithoutSystem = 0;
   factory SharedData() {
