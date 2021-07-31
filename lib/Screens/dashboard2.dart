@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:app_usage/app_usage.dart';
 import 'package:break_it/Models/Weekly.dart';
+import 'package:break_it/Models/dailyCategory.dart';
 import 'package:break_it/Models/generalData.dart';
 import 'package:break_it/Shared/Shared.dart';
 import 'package:break_it/Shared/database.dart';
@@ -19,7 +20,7 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  DateTime startOfthisWeek = DateTime.now();
+  static DateTime startOfTheWeek = DateTime.now();
   DateFormat dateFormat = DateFormat("MM/dd");
   int selectedFilterId = 0;
   int totalAvarageUsage = 0;
@@ -30,35 +31,60 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Duration(hours: DateTime.now().hour, minutes: DateTime.now().minute))
       .add(Duration(days: 1));
 
-  final _sharedData = SharedData();
+  static final _sharedData = SharedData();
 
   // ignore: must_call_super
   void initState() {
     DateTime now = DateTime.now();
-    startOfthisWeek = startOfthisWeek
-        .subtract(Duration(hours: now.hour, minutes: now.minute));
-    while (startOfthisWeek.weekday != DateTime.monday) {
-      startOfthisWeek = startOfthisWeek.subtract(Duration(days: 1));
+    startOfTheWeek =
+        startOfTheWeek.subtract(Duration(hours: now.hour, minutes: now.minute));
+    while (startOfTheWeek.weekday != DateTime.monday) {
+      startOfTheWeek = startOfTheWeek.subtract(Duration(days: 1));
     }
   }
 
-  Future<String> getAvarageThisWeekCategory() async {
-    return "aa";
+  static String getCategory(ApplicationCategory appCategory, bool isSysApp) {
+    if (isSysApp) {
+      return "System";
+    }
+    switch (appCategory) {
+      case ApplicationCategory.audio:
+        return "Audio";
+      case ApplicationCategory.game:
+        return "Game";
+      case ApplicationCategory.image:
+        return "Image";
+      case ApplicationCategory.maps:
+        return "Navigation";
+      case ApplicationCategory.news:
+        return "News";
+      case ApplicationCategory.productivity:
+        return "Productivity";
+      case ApplicationCategory.social:
+        return "Social";
+      case ApplicationCategory.video:
+        return "Video";
+      default:
+        return "Unkown";
+    }
   }
 
-  Future<String> getTodayCategory() async {
-    return "bb";
+  Future<String?> getAvarageThisWeekCategory() async {
+    return DataBase.instance.getThisWeeksCategory();
+  }
+
+  Future<String?> getTodayCategory() async {
+    return DataBase.instance.getTodaysDailyCategory();
   }
 
   Future<String> getAvarageThisWeekTimeOn() async {
-
     DateTime now = DateTime.now();
-    DateTime startOfthisWeek = now
-        .subtract(Duration(hours: now.hour, minutes: now.minute));
+    DateTime startOfthisWeek =
+        now.subtract(Duration(hours: now.hour, minutes: now.minute));
     while (startOfthisWeek.weekday != DateTime.monday) {
       startOfthisWeek = startOfthisWeek.subtract(Duration(days: 1));
     }
-
+    //This.idWeek = ThisWeeksLastDay.substract(Duratuin(hours : 24))
     String idWeek = startOfthisWeek.day.toString() +
         startOfthisWeek.month.toString() +
         startOfthisWeek.add(Duration(days: 6)).day.toString() +
@@ -66,22 +92,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
         startOfthisWeek.year.toString();
 
     List<WeeklyInfo>? result = await DataBase.instance.readWeeklyInfo(idWeek);
-    if (result != null ) {
-      if(result.last.pos == DateTime.now().difference(startOfthisWeek).inDays){
+    if (result != null) {
+      if (result.last.pos ==
+          DateTime.now().difference(startOfthisWeek).inDays) {
         int totalUsage = 0;
         for (var weeklyInfo in result) {
-            int usage = (weeklyInfo.dayUsage * 60).toInt();
-            totalUsage += usage;
+          int usage = (weeklyInfo.usageInHours * 60).toInt();
+          totalUsage += usage;
         }
-        totalUsage = totalUsage~/result.length;
+        totalUsage = totalUsage ~/ result.length;
         int totalHours = (totalUsage ~/ 60);
         int totalMinutes = totalUsage - (totalUsage ~/ 60) * 60;
         String hoursText = totalHours != 0 ? totalHours.toString() + "h" : "";
-        String minutesText = totalMinutes != 0 ? totalMinutes.toString() + "min" : "";
+        String minutesText =
+            totalMinutes != 0 ? totalMinutes.toString() + "min" : "";
         return hoursText + minutesText;
-      } else{
+      } else {
         Future.delayed(Duration(seconds: 3));
-        return getAvarageThisWeekTimeOn(); 
+        return getAvarageThisWeekTimeOn();
       }
     } else {
       Future.delayed(Duration(seconds: 3));
@@ -93,7 +121,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     WeeklyInfo? todaysWeeklyInfo =
         await DataBase.instance.getTodaysWeeklyInfo();
     if (todaysWeeklyInfo != null) {
-      int usage = (todaysWeeklyInfo.dayUsage * 60).toInt();
+      int usage = (todaysWeeklyInfo.usageInHours * 60).toInt();
       int hours = usage ~/ 60;
       int minutes = usage - (usage ~/ 60) * 60;
       String hoursText = hours != 0 ? hours.toString() + "h" : "";
@@ -105,7 +133,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Future updateTodaysData() async {
+  static Future updateTodaysData() async {
     DateTime today = DateTime.now().subtract(
         Duration(hours: DateTime.now().hour, minutes: DateTime.now().minute));
     List<AppUsageInfo> infos = await _sharedData.getUsageStats(
@@ -128,23 +156,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (todaysWeeklyInfo != null) {
       WeeklyInfo weeklyInfo = WeeklyInfo(
-          id: todaysWeeklyInfo.id,
-          idWeek: startOfthisWeek.day.toString() +
-              startOfthisWeek.month.toString() +
-              startOfthisWeek.add(Duration(days: 6)).day.toString() +
-              startOfthisWeek.add(Duration(days: 6)).month.toString() +
-              startOfthisWeek.year.toString(),
-          idDay: today.year.toString() +
-              today.month.toString() +
-              today.day.toString(),
-          dayUsage: totalUsageLocal,
-          pos: todaysWeeklyInfo.pos,
-          mainCategory: "Unknown");
+        id: todaysWeeklyInfo.id,
+        idWeek: startOfTheWeek.day.toString() +
+            startOfTheWeek.month.toString() +
+            startOfTheWeek.add(Duration(days: 6)).day.toString() +
+            startOfTheWeek.add(Duration(days: 6)).month.toString() +
+            startOfTheWeek.year.toString(),
+        idDay: today.year.toString() +
+            today.month.toString() +
+            today.day.toString(),
+        usageInHours: totalUsageLocal,
+        pos: todaysWeeklyInfo.pos,
+      );
       DataBase.instance.updateWeeklyInfo(weeklyInfo);
     }
   }
 
-  Future<List<WeeklyInfo>> getWeeklyUsage() async {
+  static Future<List<WeeklyInfo>> getWeeklyUsage() async {
     List<List<double>> weeklyUsage = [
       [0, 0],
       [1, 0],
@@ -154,11 +182,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       [5, 0],
       [6, 0]
     ];
-    String idWeek = startOfthisWeek.day.toString() +
-        startOfthisWeek.month.toString() +
-        startOfthisWeek.add(Duration(days: 6)).day.toString() +
-        startOfthisWeek.add(Duration(days: 6)).month.toString() +
-        startOfthisWeek.year.toString();
+    String idWeek = startOfTheWeek.day.toString() +
+        startOfTheWeek.month.toString() +
+        startOfTheWeek.add(Duration(days: 6)).day.toString() +
+        startOfTheWeek.add(Duration(days: 6)).month.toString() +
+        startOfTheWeek.year.toString();
 
     List<WeeklyInfo>? result = await DataBase.instance.readWeeklyInfo(idWeek);
     if (result != null) {
@@ -180,14 +208,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
       result = [];
       for (var i = 0; i < 7; i++) {
         List<AppUsageInfo> infos = await _sharedData.getUsageStats(
-            startOfthisWeek.add(Duration(days: i)),
-            startOfthisWeek.add(Duration(days: i + 1)),
+            startOfTheWeek.add(Duration(days: i)),
+            startOfTheWeek.add(Duration(days: i + 1)),
             false);
         int totalUsageLocal = 0;
-        for (var app in infos) {
+        for (var app in infos.reversed) {
           Application? moreDetails = await DeviceApps.getApp(app.packageName);
           if (moreDetails != null) {
             if (!moreDetails.systemApp) {
+              DataBase.instance.updateDailyCategory(DailyCategory(
+                  idWeek: startOfTheWeek.day.toString() +
+                      startOfTheWeek.month.toString() +
+                      startOfTheWeek.add(Duration(days: 6)).day.toString() +
+                      startOfTheWeek.add(Duration(days: 6)).month.toString() +
+                      startOfTheWeek.year.toString(),
+                  idDay: startOfTheWeek.add(Duration(days: i)).year.toString() +
+                      startOfTheWeek.add(Duration(days: i)).month.toString() +
+                      startOfTheWeek.add(Duration(days: i)).day.toString(),
+                  category: getCategory(moreDetails.category, false),
+                  usageInMin: app.usage.inMinutes));
               totalUsageLocal += app.usage.inMinutes;
             }
           }
@@ -197,17 +236,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
             : 2 + Random().nextDouble() * 10;
 
         WeeklyInfo weeklyInfo = WeeklyInfo(
-            idWeek: startOfthisWeek.day.toString() +
-                startOfthisWeek.month.toString() +
-                startOfthisWeek.add(Duration(days: 6)).day.toString() +
-                startOfthisWeek.add(Duration(days: 6)).month.toString() +
-                startOfthisWeek.year.toString(),
-            idDay: startOfthisWeek.add(Duration(days: i)).year.toString() +
-                startOfthisWeek.add(Duration(days: i)).month.toString() +
-                startOfthisWeek.add(Duration(days: i)).day.toString(),
-            dayUsage: weeklyUsage[i][1],
-            pos: weeklyUsage[i][0],
-            mainCategory: "Unknown");
+            idWeek: startOfTheWeek.day.toString() +
+                startOfTheWeek.month.toString() +
+                startOfTheWeek.add(Duration(days: 6)).day.toString() +
+                startOfTheWeek.add(Duration(days: 6)).month.toString() +
+                startOfTheWeek.year.toString(),
+            idDay: startOfTheWeek.add(Duration(days: i)).year.toString() +
+                startOfTheWeek.add(Duration(days: i)).month.toString() +
+                startOfTheWeek.add(Duration(days: i)).day.toString(),
+            usageInHours: weeklyUsage[i][1],
+            pos: weeklyUsage[i][0]);
         if (infos.length != 0) {
           DataBase.instance.createWeeklyInfo(weeklyInfo);
           result.add(weeklyInfo);
@@ -219,6 +257,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    String idWeek = startOfTheWeek.day.toString() +
+        startOfTheWeek.month.toString() +
+        startOfTheWeek.add(Duration(days: 6)).day.toString() +
+        startOfTheWeek.add(Duration(days: 6)).month.toString() +
+        startOfTheWeek.year.toString();
+    print(idWeek);
+    DateTime now = DateTime.now();
+    DateTime startOfThisWeek =
+        now.subtract(Duration(hours: now.hour, minutes: now.minute));
+    while (startOfThisWeek.weekday != DateTime.monday) {
+      startOfThisWeek = startOfThisWeek.subtract(Duration(days: 1));
+    }
+    String idThisWeek = startOfThisWeek.day.toString() +
+        startOfThisWeek.month.toString() +
+        startOfThisWeek.add(Duration(days: 6)).day.toString() +
+        startOfThisWeek.add(Duration(days: 6)).month.toString() +
+        startOfThisWeek.year.toString();
+    print("idThisWeek " + idThisWeek);
+
     _sharedData.totalUsage = 0;
     return Scaffold(
         body: SingleChildScrollView(
@@ -253,7 +310,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Container(
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    color: Color(Shared.color_primaryGrey)),
+                    color: Color(Shared.color_primary2)),
                 width: double.infinity,
                 height: 50,
                 child: Padding(
@@ -265,38 +322,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: GestureDetector(
                           onTap: () {
                             setState(() {
-                              startOfthisWeek =
-                                  startOfthisWeek.subtract(Duration(days: 6));
+                              startOfTheWeek =
+                                  startOfTheWeek.subtract(Duration(days: 7));
                             });
                           },
                           child: Icon(Icons.arrow_back_ios_new_rounded,
-                              color: Color(Shared.color_primaryViolet)),
+                              color: Color(Shared.color_primary1)),
                         ),
                       ),
                       Expanded(
                           flex: 8,
                           child: Center(
                               child: Text(
-                            dateFormat.format(startOfthisWeek) +
+                            dateFormat.format(startOfTheWeek) +
                                 " - " +
                                 dateFormat.format(
-                                    startOfthisWeek.add(Duration(days: 6))) +
+                                    startOfTheWeek.add(Duration(days: 6))) +
                                 " : " +
-                                startOfthisWeek.year.toString(),
+                                startOfTheWeek.year.toString(),
                             style: TextStyle(
-                                color: Color(Shared.color_primaryViolet)),
+                                color: Color(Shared.color_primary1)),
                           ))),
                       Expanded(
                         flex: 1,
                         child: GestureDetector(
                           onTap: () {
-                            setState(() {
-                              startOfthisWeek =
-                                  startOfthisWeek.add(Duration(days: 6));
-                            });
+                            if (idThisWeek != idWeek) {
+                              setState(() {
+                                startOfTheWeek =
+                                    startOfTheWeek.add(Duration(days: 7));
+                              });
+                            }
                           },
                           child: Icon(Icons.arrow_forward_ios_rounded,
-                              color: Color(Shared.color_primaryViolet)),
+                              color: idThisWeek != idWeek? Color(Shared.color_primary1):Colors.grey,)
                         ),
                       ),
                     ],
@@ -329,7 +388,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 show: true,
                                 getDrawingHorizontalLine: (value) {
                                   return FlLine(
-                                      color: Color(Shared.color_secondaryGrey),
+                                      color: Color(Shared.color_secondary2),
                                       strokeWidth: 0.25);
                                 },
                               ), //2mk6RpQJ
@@ -338,10 +397,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 border: Border(
                                   bottom: BorderSide(
                                       width: 0.25,
-                                      color: Color(Shared.color_secondaryGrey)),
+                                      color: Color(Shared.color_secondary2)),
                                   top: BorderSide(
                                       width: 0.25,
-                                      color: Color(Shared.color_secondaryGrey)),
+                                      color: Color(Shared.color_secondary2)),
                                 ),
                               ),
                               //TO-DO make it dynamic
@@ -353,7 +412,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               lineBarsData: [
                                 LineChartBarData(
                                     spots: data.map((e) {
-                                      return FlSpot(e.pos, e.dayUsage / 3);
+                                      return FlSpot(e.pos, e.usageInHours / 3);
                                     }).toList(),
                                     dotData: FlDotData(getDotPainter:
                                         (FlSpot spot, double xPercentage,
@@ -364,17 +423,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         strokeWidth: 1.5,
                                         color: Colors.white,
                                         strokeColor:
-                                            Color(Shared.color_primaryViolet),
+                                            Color(Shared.color_primary1),
                                       );
                                     }),
                                     isCurved: true,
                                     belowBarData: BarAreaData(
                                         show: true,
                                         colors: [
-                                          Color(Shared.color_primaryViolet)
+                                          Color(Shared.color_primary1)
                                               .withOpacity(0.05)
                                         ]),
-                                    colors: [Color(Shared.color_primaryViolet)])
+                                    colors: [Color(Shared.color_primary1)])
                               ])),
                         ),
                       );
@@ -388,7 +447,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             width: 150,
                             child: CircularProgressIndicator(
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(Shared.color_primaryViolet)),
+                                  Color(Shared.color_primary1)),
                             ),
                           ),
                         ),
@@ -404,7 +463,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           width: 150,
                           child: CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(Shared.color_primaryViolet)),
+                                Color(Shared.color_primary1)),
                           ),
                         ),
                       ),
@@ -560,10 +619,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                       return Text(app.appName);
                                                     } else {
                                                       return Text(
-                                                          data[data.length - 1].appName);
+                                                          data[data.length - 1]
+                                                              .appName);
                                                     }
                                                   } else {
-                                                    return Text( data[data.length - 1].appName);
+                                                    return Text(
+                                                        data[data.length - 1]
+                                                            .appName);
                                                   }
                                                 })
                                           ],
@@ -595,10 +657,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                       return Text(app.appName);
                                                     } else {
                                                       return Text(
-                                                          data[data.length - 2].appName);
+                                                          data[data.length - 2]
+                                                              .appName);
                                                     }
                                                   } else {
-                                                    return Text(data[data.length - 2].appName);
+                                                    return Text(
+                                                        data[data.length - 2]
+                                                            .appName);
                                                   }
                                                 })
                                           ],
@@ -630,10 +695,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                       return Text(app.appName);
                                                     } else {
                                                       return Text(
-                                                         data[data.length - 3].appName);
+                                                          data[data.length - 3]
+                                                              .appName);
                                                     }
                                                   } else {
-                                                    return Text(data[data.length - 3].appName);
+                                                    return Text(
+                                                        data[data.length - 3]
+                                                            .appName);
                                                   }
                                                 })
                                           ],
@@ -665,10 +733,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                       return Text(app.appName);
                                                     } else {
                                                       return Text(
-                                                          data[data.length - 4].appName);
+                                                          data[data.length - 4]
+                                                              .appName);
                                                     }
                                                   } else {
-                                                    return Text(data[data.length - 4].appName);
+                                                    return Text(
+                                                        data[data.length - 4]
+                                                            .appName);
                                                   }
                                                 })
                                           ],
@@ -708,7 +779,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             width: MediaQuery.of(context).size.width / 3,
                             child: CircularProgressIndicator(
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(Shared.color_primaryViolet)),
+                                  Color(Shared.color_primary1)),
                             ),
                           ),
                         ),
@@ -723,7 +794,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           width: MediaQuery.of(context).size.width / 3,
                           child: CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(Shared.color_primaryViolet)),
+                                Color(Shared.color_primary1)),
                           ),
                         ),
                       ),
@@ -735,8 +806,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ));
   }
 
-  Column drawGenerals(String title, Future<String> futureCategory,
-      Future<String> futureTimeOn) {
+  Column drawGenerals(String title, Future<String?> futureCategory,
+      Future<String?> futureTimeOn) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -747,7 +818,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontSize: 18,
               fontWeight: FontWeight.w600,
               fontFamily: "Yu Gothic UI",
-              color: Color(Shared.color_primaryViolet)),
+              color: Color(Shared.color_primary1)),
         ),
         SizedBox(
           height: 10,
@@ -759,7 +830,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Container(
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    color: Color(Shared.color_primaryGrey)),
+                    color: Color(Shared.color_primary2)),
                 height: 70,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -777,7 +848,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               fontFamily: "Yu Gothic UI",
-                              color: Color(Shared.color_primaryViolet)),
+                              color: Color(Shared.color_primary1)),
                         ),
                         FutureBuilder(
                             future: futureCategory,
@@ -792,7 +863,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         fontWeight: FontWeight.w600,
                                         fontFamily: "Yu Gothic UI",
                                         color:
-                                            Color(Shared.color_secondaryGrey)),
+                                            Color(Shared.color_secondary2)),
                                   );
                                 } else {
                                   return Center(
@@ -806,7 +877,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
                                                   Color(Shared
-                                                      .color_primaryViolet)),
+                                                      .color_primary1)),
                                         ),
                                       ),
                                     ),
@@ -823,7 +894,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       child: CircularProgressIndicator(
                                         valueColor: AlwaysStoppedAnimation<
                                                 Color>(
-                                            Color(Shared.color_primaryViolet)),
+                                            Color(Shared.color_primary1)),
                                       ),
                                     ),
                                   ),
@@ -844,7 +915,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Container(
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    color: Color(Shared.color_primaryGrey)),
+                    color: Color(Shared.color_primary2)),
                 height: 70,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -862,7 +933,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               fontFamily: "Yu Gothic UI",
-                              color: Color(Shared.color_primaryViolet)),
+                              color: Color(Shared.color_primary1)),
                         ),
                         FutureBuilder(
                             future: futureTimeOn,
@@ -877,7 +948,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         fontWeight: FontWeight.w600,
                                         fontFamily: "Yu Gothic UI",
                                         color:
-                                            Color(Shared.color_secondaryGrey)),
+                                            Color(Shared.color_secondary2)),
                                   );
                                 } else {
                                   return Center(
@@ -891,7 +962,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
                                                   Color(Shared
-                                                      .color_primaryViolet)),
+                                                      .color_primary1)),
                                         ),
                                       ),
                                     ),
@@ -908,7 +979,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       child: CircularProgressIndicator(
                                         valueColor: AlwaysStoppedAnimation<
                                                 Color>(
-                                            Color(Shared.color_primaryViolet)),
+                                            Color(Shared.color_primary1)),
                                       ),
                                     ),
                                   ),
@@ -949,7 +1020,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               text,
               style: TextStyle(
                 color: id == selectedFilterId
-                    ? Color(Shared.color_primaryViolet)
+                    ? Color(Shared.color_primary1)
                     : Colors.white,
               ),
             )),

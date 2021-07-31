@@ -22,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: Color(Shared.color_primaryViolet),
+        backgroundColor: Color(Shared.color_primary1),
         title: Text(
           screenTitle[currentPageId],
         ),
@@ -52,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       bottomNavigationBar: Container(
-        color: Color(Shared.color_primaryViolet),
+        color: Color(Shared.color_primary1),
         width: MediaQuery.of(context).size.width,
         height: 50,
         child: Row(

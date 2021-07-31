@@ -1,3 +1,4 @@
+import 'package:break_it/Screens/selectLanguage.dart';
 import 'package:break_it/Shared/Shared.dart';
 import 'package:flutter/material.dart';
 
@@ -15,10 +16,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: Color(Shared.color_primaryViolet),
+        backgroundColor: Color(Shared.color_primary1),
         title: Text("Settings"),
         leading: IconButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.pop(context);
+          },
           icon: Icon(
             Icons.arrow_back_rounded,
           ),
@@ -36,7 +39,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: Color(Shared.color_primaryViolet),
+                color: Color(Shared.color_primary1),
               ),
             ),
             SizedBox(height: 15),
@@ -44,34 +47,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: EdgeInsets.symmetric(horizontal: 0, vertical: 5),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 9,
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.translate_sharp,
-                              color: Color(Shared.color_primaryViolet),
-                            ),
-                            SizedBox(width: 10),
-                            Text(
-                              "Language",
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: Color(Shared.color_primaryViolet),
+                  GestureDetector(
+                    onTap: (){
+                      Navigator.push(context, MaterialPageRoute(builder :(context)=>SelectLanguageScreen()));
+                    },
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 9,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.translate_sharp,
+                                color: Color(Shared.color_primary1),
                               ),
-                            ),
-                          ],
+                              SizedBox(width: 10),
+                              Text(
+                                "Language",
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: Color(Shared.color_primary1),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Expanded(
-                          flex: 1,
-                          child: Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            color: Color(Shared.color_primaryViolet),
-                          )),
-                    ],
+                        Expanded(
+                            flex: 1,
+                            child: Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              color: Color(Shared.color_primary1),
+                            )),
+                      ],
+                    ),
                   ),
                   SizedBox(height: 5),
                   Divider()
@@ -90,14 +98,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           children: [
                             Icon(
                               Icons.notifications_on_outlined,
-                              color: Color(Shared.color_primaryViolet),
+                              color: Color(Shared.color_primary1),
                             ),
                             SizedBox(width: 10),
                             Text(
                               "Notifications",
                               style: TextStyle(
                                 fontSize: 15,
-                                color: Color(Shared.color_primaryViolet),
+                                color: Color(Shared.color_primary1),
                               ),
                             ),
                           ],
@@ -107,7 +115,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           flex: 1,
                           child: Icon(
                             Icons.arrow_forward_ios_rounded,
-                            color: Color(Shared.color_primaryViolet),
+                            color: Color(Shared.color_primary1),
                           )),
                     ],
                   ),
@@ -128,14 +136,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           children: [
                             Icon(
                               Icons.star_border_rounded,
-                              color: Color(Shared.color_primaryViolet),
+                              color: Color(Shared.color_primary1),
                             ),
                             SizedBox(width: 10),
                             Text(
                               "Rate Us",
                               style: TextStyle(
                                 fontSize: 15,
-                                color: Color(Shared.color_primaryViolet),
+                                color: Color(Shared.color_primary1),
                               ),
                             ),
                           ],
@@ -145,7 +153,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           flex: 1,
                           child: Icon(
                             Icons.arrow_forward_ios_rounded,
-                            color: Color(Shared.color_primaryViolet),
+                            color: Color(Shared.color_primary1),
                           )),
                     ],
                   ),
@@ -166,14 +174,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           children: [
                             Icon(
                               Icons.help_outline_rounded,
-                              color: Color(Shared.color_primaryViolet),
+                              color: Color(Shared.color_primary1),
                             ),
                             SizedBox(width: 10),
                             Text(
                               "About",
                               style: TextStyle(
                                 fontSize: 15,
-                                color: Color(Shared.color_primaryViolet),
+                                color: Color(Shared.color_primary1),
                               ),
                             ),
                           ],
@@ -183,7 +191,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           flex: 1,
                           child: Icon(
                             Icons.arrow_forward_ios_rounded,
-                            color: Color(Shared.color_primaryViolet),
+                            color: Color(Shared.color_primary1),
                           )),
                     ],
                   ),
@@ -204,14 +212,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           children: [
                             Icon(
                               Icons.dark_mode_outlined,
-                              color: Color(Shared.color_primaryViolet),
+                              color: Color(Shared.color_primary1),
                             ),
                             SizedBox(width: 10),
                             Text(
                               "Dark Theme",
                               style: TextStyle(
                                 fontSize: 15,
-                                color: Color(Shared.color_primaryViolet),
+                                color: Color(Shared.color_primary1),
                               ),
                             ),
                           ],
@@ -234,7 +242,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(25),
                                         color:
-                                            Color(Shared.color_secondaryGrey))),
+                                            Color(Shared.color_secondary2))),
                                 Positioned(
                                   right: 10,
                                   child: Row(
@@ -268,7 +276,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: Color(Shared.color_primaryViolet),
+                color: Color(Shared.color_primary1),
               ),
             ),
             SizedBox(height: 15),
@@ -290,14 +298,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               children: [
                                 Icon(
                                   Icons.warning_amber_rounded,
-                                  color: Color(Shared.color_primaryViolet),
+                                  color: Color(Shared.color_primary1),
                                 ),
                                 SizedBox(width: 10),
                                 Text(
                                   "Report a bug",
                                   style: TextStyle(
                                     fontSize: 15,
-                                    color: Color(Shared.color_primaryViolet),
+                                    color: Color(Shared.color_primary1),
                                   ),
                                 ),
                               ],
@@ -307,7 +315,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               flex: 1,
                               child: Icon(
                                 Icons.arrow_forward_ios_rounded,
-                                color: Color(Shared.color_primaryViolet),
+                                color: Color(Shared.color_primary1),
                               )),
                         ],
                       ),
@@ -335,14 +343,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               children: [
                                 Icon(
                                   Icons.send_outlined,
-                                  color: Color(Shared.color_primaryViolet),
+                                  color: Color(Shared.color_primary1),
                                 ),
                                 SizedBox(width: 10),
                                 Text(
                                   "Send FeedBack",
                                   style: TextStyle(
                                     fontSize: 15,
-                                    color: Color(Shared.color_primaryViolet),
+                                    color: Color(Shared.color_primary1),
                                   ),
                                 ),
                               ],
@@ -352,7 +360,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               flex: 1,
                               child: Icon(
                                 Icons.arrow_forward_ios_rounded,
-                                color: Color(Shared.color_primaryViolet),
+                                color: Color(Shared.color_primary1),
                               )),
                         ],
                       ),

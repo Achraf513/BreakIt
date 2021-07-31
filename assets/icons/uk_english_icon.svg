@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="27" height="27" viewBox="0 0 27 27">
+  <defs>
+    <clipPath id="clip-path">
+      <circle id="Ellipse_42" data-name="Ellipse 42" cx="13.5" cy="13.5" r="13.5" transform="translate(1695 1660)" fill="#fff"/>
+    </clipPath>
+  </defs>
+  <g id="Mask_Group_5" data-name="Mask Group 5" transform="translate(-1695 -1660)" clip-path="url(#clip-path)">
+    <g id="_2361499_kingdom_uk_united_icon" data-name="2361499_kingdom_uk_united_icon" transform="translate(1695.27 1660)">
+      <path id="rect6883" d="M7.966,5.936A1.515,1.515,0,0,0,6.447,7.455V31.119a1.515,1.515,0,0,0,1.519,1.519H31.63a1.515,1.515,0,0,0,1.519-1.519V7.455A1.515,1.515,0,0,0,31.63,5.936H7.966Z" transform="translate(-6.447 -5.936)" fill="#00247d"/>
+      <path id="path4589" d="M6.447,39.124v2.324l11.338,6.546L6.447,54.54v2.324L19.8,49.157l13.351,7.708V54.54L21.811,47.994l11.338-6.546V39.124L19.8,46.832Z" transform="translate(-6.447 -34.644)" fill="#cf142b"/>
+      <path id="path4587" d="M17.5,5.936V16.991H6.447v4.592H17.5V32.637h4.592V21.583H33.148V16.991H22.094V5.936H17.5Z" transform="translate(-6.447 -5.936)" fill="#cf142b"/>
+      <path id="rect4572" d="M17.055,5.936v10.09L6.447,9.9v1.031l9.72,5.612h-2.24L6.447,12.225v1.031l5.694,3.288H6.447v.893H16.4c.608,0,.98-.025,1.545-.025V5.936Zm4.592,0v11.5c.545,0,1.053,0,1.545,0h9.956v-.893H27.454l5.694-3.288V12.225l-7.481,4.319h-2.24l9.72-5.612V9.9L22.54,16.025V5.936Zm-3.7,15.211c-.515,0-1.053-.011-1.545-.011H6.447v.893h5.694L6.447,25.317v1.031l7.48-4.319h2.24l-9.72,5.612v1.031l10.608-6.125v10.09h.893V21.147Zm3.7,0v11.49h.893V22.548l10.608,6.125V27.641l-9.72-5.612h2.24l7.48,4.319V25.317l-5.694-3.288h5.694v-.893H23.193c-.565,0-1.545.011-1.545.011Z" transform="translate(-6.447 -5.936)" fill="#fff"/>
+    </g>
+  </g>
+</svg>

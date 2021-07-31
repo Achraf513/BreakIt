@@ -44,7 +44,7 @@ class GrantPermession extends StatelessWidget {
                               "Welcome to BreakIt",
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                  color: Color(Shared.color_primaryViolet),
+                                  color: Color(Shared.color_primary1),
                                   fontWeight: FontWeight.w400,
                                   fontSize: 25),
                             ),
@@ -55,7 +55,7 @@ class GrantPermession extends StatelessWidget {
                               "In order to use the app, you need to grant it the permession to access the packages usage states.\nClick the 'Allow' button and select BreakIt, then grant it the permession.",
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                  color: Color(Shared.color_primaryViolet),
+                                  color: Color(Shared.color_primary1),
                                   fontWeight: FontWeight.w400,
                                   fontSize: 15),
                             ),
@@ -67,7 +67,7 @@ class GrantPermession extends StatelessWidget {
                               height: 50,
                               decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(25),
-                                  color: Color(Shared.color_primaryViolet)),
+                                  color: Color(Shared.color_primary1)),
                               child: TextButton(
                                 onPressed: () async {
                                   List<AppUsageInfo> infos = await askForPermession();

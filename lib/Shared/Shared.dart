@@ -5,15 +5,22 @@ import 'package:break_it/Shared/database.dart';
 import 'package:device_apps/device_apps.dart';
 
 class Shared {
-  static const int color_primaryViolet = 0xFF430064;
-  static const int color_secondaryViolet = 0xFF9E00EC;
-  static const int color_primaryGrey = 0xFFF6F5F6;
-  static const int color_secondaryGrey = 0xFF655C98;
+  //Colors
+  static const int color_primary1 = 0xFF430064;
+  static const int color_secondary1 = 0xFF9E00EC;
+  static const int color_primary2 = 0xFFF6F5F6;
+  static const int color_secondary2 = 0xFF655C98;
+
   static const int pieChartColor_yellow = 0xFF58508d;
   static const int pieChartColor_violet = 0xFFbc5090;
   static const int pieChartColor_blue = 0xFFff6361;
   static const int pieChartColor_red = 0xFFffa600;
   static const int pieChartColor_green = 0xFF34ad1d;
+
+  static String selectedLanguage = "English";
+
+  //Sentences
+
 }
 
 class SharedData {
@@ -21,6 +28,14 @@ class SharedData {
   bool permessionGranted = false;
   int totalUsage = 0;
   int totalUsageWithoutSystem = 0;
+  List<AppUsageInfo> applications = [];
+
+  Future getAppList() async {
+    applications = [];
+    applications.addAll(await SharedData().getUsageStats(DateTime.now().subtract(Duration(days: 1)),DateTime.now(),false));
+    applications.sort((a, b) => a.usage.compareTo(b.usage));
+  }
+
   factory SharedData() {
     return _sharedData;
   }

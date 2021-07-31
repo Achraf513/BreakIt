@@ -56,17 +56,17 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                     decoration: InputDecoration(
                       enabledBorder:  OutlineInputBorder(borderRadius: const BorderRadius.all(
                           const Radius.circular(20.0),
-                        ),borderSide : BorderSide(color: Color(Shared.color_primaryViolet), width: 0.5)),
+                        ),borderSide : BorderSide(color: Color(Shared.color_primary1), width: 0.5)),
                       focusedBorder: OutlineInputBorder(borderRadius: const BorderRadius.all(
                           const Radius.circular(20.0),
-                        ),borderSide : BorderSide(color: Color(Shared.color_primaryViolet), width: 1)),
+                        ),borderSide : BorderSide(color: Color(Shared.color_primary1), width: 1)),
                       filled: true,
-                      prefixIcon: Icon(Icons.search_rounded, color: Color(Shared.color_primaryViolet),),
+                      prefixIcon: Icon(Icons.search_rounded, color: Color(Shared.color_primary1),),
                       fillColor: Colors.white,
                       hintText: "Search by application",
                       hintStyle: TextStyle(
                         fontSize: 15,
-                        color: Color(Shared.color_primaryViolet).withAlpha(128)
+                        color: Color(Shared.color_primary1).withAlpha(128)
                       )
                     ),
                   ),
@@ -75,7 +75,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                   margin: EdgeInsets.fromLTRB(20, 10, 20, 5),
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
-                      color: Color(Shared.color_primaryGrey)),
+                      color: Color(Shared.color_primary2)),
                   width: double.infinity,
                   height: 50,
                   child: Padding(
@@ -85,7 +85,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                         Expanded(
                           flex: 1,
                           child: GestureDetector(
-                            child:Icon(Icons.arrow_back_ios_new_rounded,color: dateFormat.format(dayFilter.subtract(Duration(days: 1)))!=dateFormat.format(DateTime.now().subtract(Duration(days: 6)))?Color(Shared.color_primaryViolet):Colors.grey,),
+                            child:Icon(Icons.arrow_back_ios_new_rounded,color: dateFormat.format(dayFilter.subtract(Duration(days: 1)))!=dateFormat.format(DateTime.now().subtract(Duration(days: 6)))?Color(Shared.color_primary1):Colors.grey,),
                             onTap: (){
                               if(dateFormat.format(dayFilter.subtract(Duration(days: 1)))!=dateFormat.format(DateTime.now().subtract(Duration(days: 6)))){ // add only 7 days possible rotation
                                 setState(() {
@@ -99,12 +99,12 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                             flex: 8,
                             child: Center(child: Text(
                               dateFormat.format(dayFilter.subtract(Duration(days: 1))),
-                              style: TextStyle(color: Color(Shared.color_primaryViolet)),
+                              style: TextStyle(color: Color(Shared.color_primary1)),
                             ))),
                         Expanded(
                           flex: 1,
                           child: GestureDetector(
-                            child: Icon(Icons.arrow_forward_ios_rounded,color: dateFormat.format(dayFilter.subtract(Duration(days: 1)))==dateFormat.format(DateTime.now())?Colors.grey:Color(Shared.color_primaryViolet)),
+                            child: Icon(Icons.arrow_forward_ios_rounded,color: dateFormat.format(dayFilter.subtract(Duration(days: 1)))==dateFormat.format(DateTime.now())?Colors.grey:Color(Shared.color_primary1)),
                             onTap: (){
                               if(dateFormat.format(dayFilter.subtract(Duration(days: 1)))!=dateFormat.format(DateTime.now())){
                                 setState(() {
@@ -158,7 +158,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                   borderRadius:
                                                       BorderRadius.circular(10),
                                                   color: Color(
-                                                      Shared.color_primaryGrey),
+                                                      Shared.color_primary2),
                                                 ),
                                                 padding: const EdgeInsets.symmetric(
                                                     horizontal: 15, vertical: 10),
@@ -195,7 +195,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                                     style: TextStyle(
                                                                       fontSize: 15,
                                                                       fontWeight: FontWeight.w600,
-                                                                      color: Color(Shared.color_primaryViolet)
+                                                                      color: Color(Shared.color_primary1)
                                                                     )),
                                                               ),
                                                             ],
@@ -262,7 +262,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                               text: TextSpan(
                                                                 text: "Usage Percentage : ",
                                                                 style: TextStyle(
-                                                                  color: Color(Shared.color_primaryViolet),
+                                                                  color: Color(Shared.color_primary1),
                                                                   fontSize: 12,
                                                                 ),
                                                                 children: <TextSpan>[
@@ -280,7 +280,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                               text: TextSpan(
                                                                 text:  "Used For : ",
                                                                 style: TextStyle(
-                                                                  color: Color(Shared.color_primaryViolet),
+                                                                  color: Color(Shared.color_primary1),
                                                                   fontSize: 12,
                                                                 ),
                                                                 children: <TextSpan>[
@@ -301,7 +301,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                               text: TextSpan(
                                                                 text:  "category : ",
                                                                 style: TextStyle(
-                                                                  color: Color(Shared.color_primaryViolet),
+                                                                  color: Color(Shared.color_primary1),
                                                                   fontSize: 12,
                                                                 ),
                                                                 children: <TextSpan>[
@@ -333,7 +333,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                 width: MediaQuery.of(context).size.width / 3,
                                 child: CircularProgressIndicator(
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                      Color(Shared.color_primaryViolet)),
+                                      Color(Shared.color_primary1)),
                                 ),
                               ),
                             ),
@@ -348,7 +348,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                               width: MediaQuery.of(context).size.width / 3,
                               child: CircularProgressIndicator(
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                    Color(Shared.color_primaryViolet)),
+                                    Color(Shared.color_primary1)),
                               ),
                             ),
                           ),
