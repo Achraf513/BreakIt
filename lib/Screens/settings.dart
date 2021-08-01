@@ -17,7 +17,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: Color(Shared.color_primary1),
-        title: Text("Settings"),
+        title: Text(SharedData().dictionary[Shared.selectedLanguage]?["Settings"]??"Settings",),
         leading: IconButton(
           onPressed: () {
             Navigator.pop(context);
@@ -35,7 +35,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             SizedBox(height: 10),
             Text(
-              "General",
+              SharedData().dictionary[Shared.selectedLanguage]?["General"]??"General",
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -49,7 +49,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   GestureDetector(
                     onTap: (){
-                      Navigator.push(context, MaterialPageRoute(builder :(context)=>SelectLanguageScreen()));
+                      Navigator.push(context, MaterialPageRoute(builder :(context)=>SelectLanguageScreen())).then((value){
+                        setState((){});
+                      });
                     },
                     child: Row(
                       children: [
@@ -63,7 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                               SizedBox(width: 10),
                               Text(
-                                "Language",
+                                SharedData().dictionary[Shared.selectedLanguage]?["Language"]??"Language",
                                 style: TextStyle(
                                   fontSize: 15,
                                   color: Color(Shared.color_primary1),
@@ -102,7 +104,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                             SizedBox(width: 10),
                             Text(
-                              "Notifications",
+                              SharedData().dictionary[Shared.selectedLanguage]?["Notifications"]??"Notifications",
                               style: TextStyle(
                                 fontSize: 15,
                                 color: Color(Shared.color_primary1),
@@ -140,7 +142,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                             SizedBox(width: 10),
                             Text(
-                              "Rate Us",
+                              SharedData().dictionary[Shared.selectedLanguage]?["Rate Us"]??"Rate Us",
                               style: TextStyle(
                                 fontSize: 15,
                                 color: Color(Shared.color_primary1),
@@ -178,7 +180,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                             SizedBox(width: 10),
                             Text(
-                              "About",
+                              SharedData().dictionary[Shared.selectedLanguage]?["About"]??"About",
                               style: TextStyle(
                                 fontSize: 15,
                                 color: Color(Shared.color_primary1),
@@ -216,7 +218,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                             SizedBox(width: 10),
                             Text(
-                              "Dark Theme",
+                              SharedData().dictionary[Shared.selectedLanguage]?["Dark Theme"]??"Dark Theme",
                               style: TextStyle(
                                 fontSize: 15,
                                 color: Color(Shared.color_primary1),
@@ -272,7 +274,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             SizedBox(height:30),
             Text(
-              "FeedBack",
+              SharedData().dictionary[Shared.selectedLanguage]?["FeedBack"]??"FeedBack",
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -302,7 +304,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                                 SizedBox(width: 10),
                                 Text(
-                                  "Report a bug",
+                                  SharedData().dictionary[Shared.selectedLanguage]?["Report a bug"]??"Report a bug",
                                   style: TextStyle(
                                     fontSize: 15,
                                     color: Color(Shared.color_primary1),
@@ -347,7 +349,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                                 SizedBox(width: 10),
                                 Text(
-                                  "Send FeedBack",
+                                  SharedData().dictionary[Shared.selectedLanguage]?["Send FeedBack"]??"Send FeedBack",
                                   style: TextStyle(
                                     fontSize: 15,
                                     color: Color(Shared.color_primary1),

@@ -14,11 +14,15 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<String> screenTitle = ["Usage Dashboard","Activities","Rules"];
   int currentPageId = 0;
   PageController pageController = PageController();
   @override
   Widget build(BuildContext context) {
+  List<String> screenTitle = [
+    SharedData().dictionary[Shared.selectedLanguage]?["Usage Dashboard"]??"Usage Dashboard",
+    SharedData().dictionary[Shared.selectedLanguage]?["Activities"]??"Activities",
+    SharedData().dictionary[Shared.selectedLanguage]?["Rules"]??"Rules",
+  ];
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -28,7 +32,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         leading: IconButton(
           onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsScreen()),);
+            Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsScreen()),).then((value){
+              setState((){
+
+              });
+            });
           },
           icon: SvgPicture.asset(
             "assets/icons/Settings_outlined.svg",

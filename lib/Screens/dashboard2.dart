@@ -24,6 +24,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   DateFormat dateFormat = DateFormat("MM/dd");
   int selectedFilterId = 0;
   int totalAvarageUsage = 0;
+  static SharedData sharedInstance = SharedData();
 
   List<int> monthlyUsage = [];
   DateTime dayFilter = DateTime.now()
@@ -43,7 +44,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  static String getCategory(ApplicationCategory appCategory, bool isSysApp) {
+  static String? getCategory(
+      ApplicationCategory appCategory, bool isSysApp, bool forDataBase) {
+    if (!forDataBase) {
+      if (isSysApp) {
+        return sharedInstance.dictionary[Shared.selectedLanguage]?["System"];
+      }
+      switch (appCategory) {
+        case ApplicationCategory.audio:
+          return sharedInstance.dictionary[Shared.selectedLanguage]?["Audio"];
+        case ApplicationCategory.game:
+          return sharedInstance.dictionary[Shared.selectedLanguage]?["Game"];
+        case ApplicationCategory.image:
+          return sharedInstance.dictionary[Shared.selectedLanguage]?["Image"];
+        case ApplicationCategory.maps:
+          return sharedInstance.dictionary[Shared.selectedLanguage]
+              ?["Navigation"];
+        case ApplicationCategory.news:
+          return sharedInstance.dictionary[Shared.selectedLanguage]?["News"];
+        case ApplicationCategory.productivity:
+          return sharedInstance.dictionary[Shared.selectedLanguage]
+              ?["Productivity"];
+        case ApplicationCategory.social:
+          return sharedInstance.dictionary[Shared.selectedLanguage]?["Social"];
+        case ApplicationCategory.video:
+          return sharedInstance.dictionary[Shared.selectedLanguage]?["Video"];
+        default:
+          return sharedInstance.dictionary[Shared.selectedLanguage]?["Unkown"];
+      }
+    }
     if (isSysApp) {
       return "System";
     }
@@ -70,11 +99,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<String?> getAvarageThisWeekCategory() async {
-    return DataBase.instance.getThisWeeksCategory();
+    String test = await DataBase.instance.getThisWeeksCategory()??"";
+    return sharedInstance.dictionary[Shared.selectedLanguage]?[test];
   }
 
   Future<String?> getTodayCategory() async {
-    return DataBase.instance.getTodaysDailyCategory();
+    String test = await DataBase.instance.getTodaysDailyCategory()??"";
+    return sharedInstance.dictionary[Shared.selectedLanguage]?[test];
   }
 
   Future<String> getAvarageThisWeekTimeOn() async {
@@ -225,7 +256,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   idDay: startOfTheWeek.add(Duration(days: i)).year.toString() +
                       startOfTheWeek.add(Duration(days: i)).month.toString() +
                       startOfTheWeek.add(Duration(days: i)).day.toString(),
-                  category: getCategory(moreDetails.category, false),
+                  category: getCategory(moreDetails.category, false, true) ??
+                      "Unkown",
                   usageInMin: app.usage.inMinutes));
               totalUsageLocal += app.usage.inMinutes;
             }
@@ -274,7 +306,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         startOfThisWeek.add(Duration(days: 6)).day.toString() +
         startOfThisWeek.add(Duration(days: 6)).month.toString() +
         startOfThisWeek.year.toString();
-    print("idThisWeek " + idThisWeek);
 
     _sharedData.totalUsage = 0;
     return Scaffold(
@@ -340,23 +371,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     startOfTheWeek.add(Duration(days: 6))) +
                                 " : " +
                                 startOfTheWeek.year.toString(),
-                            style: TextStyle(
-                                color: Color(Shared.color_primary1)),
+                            style:
+                                TextStyle(color: Color(Shared.color_primary1)),
                           ))),
                       Expanded(
                         flex: 1,
                         child: GestureDetector(
-                          onTap: () {
-                            if (idThisWeek != idWeek) {
-                              setState(() {
-                                startOfTheWeek =
-                                    startOfTheWeek.add(Duration(days: 7));
-                              });
-                            }
-                          },
-                          child: Icon(Icons.arrow_forward_ios_rounded,
-                              color: idThisWeek != idWeek? Color(Shared.color_primary1):Colors.grey,)
-                        ),
+                            onTap: () {
+                              if (idThisWeek != idWeek) {
+                                setState(() {
+                                  startOfTheWeek =
+                                      startOfTheWeek.add(Duration(days: 7));
+                                });
+                              }
+                            },
+                            child: Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              color: idThisWeek != idWeek
+                                  ? Color(Shared.color_primary1)
+                                  : Colors.grey,
+                            )),
                       ),
                     ],
                   ),
@@ -483,11 +517,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 height: 20,
               ),
               drawGenerals(
-                  "TODAY'S STATES", getTodayCategory(), getTodayTimeOn()),
+                  sharedInstance.dictionary[Shared.selectedLanguage]
+                          ?["TODAY'S STATES"] ??
+                      "",
+                  getTodayCategory(),
+                  getTodayTimeOn()),
               SizedBox(
                 height: 20,
               ),
-              drawGenerals("AVERAGE THIS WEEK", getAvarageThisWeekCategory(),
+              drawGenerals(
+                  sharedInstance.dictionary[Shared.selectedLanguage]
+                          ?["AVERAGE THIS WEEK"] ??
+                      "",
+                  getAvarageThisWeekCategory(),
                   getAvarageThisWeekTimeOn()),
               SizedBox(
                 height: 20,
@@ -757,7 +799,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                               color: Color(
                                                   Shared.pieChartColor_green),
                                             ),
-                                            Text("Other")
+                                            Text(sharedInstance.dictionary[
+                                                        Shared.selectedLanguage]
+                                                    ?["Other"] ??
+                                                "")
                                           ],
                                         ),
                                       ),
@@ -843,7 +888,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Category",
+                          sharedInstance.dictionary[Shared.selectedLanguage]
+                                  ?["Category"] ??
+                              "",
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -862,8 +909,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                         fontFamily: "Yu Gothic UI",
-                                        color:
-                                            Color(Shared.color_secondary2)),
+                                        color: Color(Shared.color_secondary2)),
                                   );
                                 } else {
                                   return Center(
@@ -876,8 +922,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         child: CircularProgressIndicator(
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                                  Color(Shared
-                                                      .color_primary1)),
+                                                  Color(Shared.color_primary1)),
                                         ),
                                       ),
                                     ),
@@ -892,9 +937,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       height: 20,
                                       width: 20,
                                       child: CircularProgressIndicator(
-                                        valueColor: AlwaysStoppedAnimation<
-                                                Color>(
-                                            Color(Shared.color_primary1)),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Color(Shared.color_primary1)),
                                       ),
                                     ),
                                   ),
@@ -928,7 +973,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Total Usage",
+                          sharedInstance.dictionary[Shared.selectedLanguage]
+                                  ?["Total Usage"] ??
+                              "",
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -947,8 +994,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                         fontFamily: "Yu Gothic UI",
-                                        color:
-                                            Color(Shared.color_secondary2)),
+                                        color: Color(Shared.color_secondary2)),
                                   );
                                 } else {
                                   return Center(
@@ -961,8 +1007,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         child: CircularProgressIndicator(
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                                  Color(Shared
-                                                      .color_primary1)),
+                                                  Color(Shared.color_primary1)),
                                         ),
                                       ),
                                     ),
@@ -977,9 +1022,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       height: 20,
                                       width: 20,
                                       child: CircularProgressIndicator(
-                                        valueColor: AlwaysStoppedAnimation<
-                                                Color>(
-                                            Color(Shared.color_primary1)),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Color(Shared.color_primary1)),
                                       ),
                                     ),
                                   ),
@@ -1044,19 +1089,33 @@ class LineTitles {
             getTitles: (value) {
               switch (value.toInt()) {
                 case 0:
-                  return "Monday";
+                  return SharedData().dictionary[Shared.selectedLanguage]
+                          ?["Monday"] ??
+                      "";
                 case 1:
-                  return "Tuesday";
+                  return SharedData().dictionary[Shared.selectedLanguage]
+                          ?["Tuesday"] ??
+                      "";
                 case 2:
-                  return "Wednesday";
+                  return SharedData().dictionary[Shared.selectedLanguage]
+                          ?["Wednesday"] ??
+                      "";
                 case 3:
-                  return "Thursday";
+                  return SharedData().dictionary[Shared.selectedLanguage]
+                          ?["Thursday"] ??
+                      "";
                 case 4:
-                  return "Friday";
+                  return SharedData().dictionary[Shared.selectedLanguage]
+                          ?["Friday"] ??
+                      "";
                 case 5:
-                  return "Saturday";
+                  return SharedData().dictionary[Shared.selectedLanguage]
+                          ?["Saturday"] ??
+                      "";
                 case 6:
-                  return "Sunday";
+                  return SharedData().dictionary[Shared.selectedLanguage]
+                          ?["Sunday"] ??
+                      "";
                 default:
                   return "";
               }

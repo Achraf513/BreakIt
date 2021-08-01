@@ -10,6 +10,7 @@ class SelectLanguageScreen extends StatefulWidget {
 }
 
 class _SelectLanguageScreenState extends State<SelectLanguageScreen> {
+  SharedData sharedInstance = SharedData();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,7 +18,7 @@ class _SelectLanguageScreenState extends State<SelectLanguageScreen> {
         appBar: AppBar(
           centerTitle: true,
           backgroundColor: Color(Shared.color_primary1),
-          title: Text("Settings"),
+          title: Text(sharedInstance.dictionary[Shared.selectedLanguage]?["Settings"]??"Settings"),
           leading: IconButton(
             onPressed: () {
               Navigator.pop(context);
@@ -33,7 +34,7 @@ class _SelectLanguageScreenState extends State<SelectLanguageScreen> {
                     children: [
                       SizedBox(height: 10),
                       Text(
-                        "Language",
+                        sharedInstance.dictionary[Shared.selectedLanguage]?["Language"]??"Language",
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
@@ -62,7 +63,7 @@ class _SelectLanguageScreenState extends State<SelectLanguageScreen> {
                                         Container(child: SvgPicture.asset("assets/icons/uk_icon.svg"),width: 30,height: 30,),
                                         SizedBox(width: 15),
                                         Text(
-                                          "English",
+                                          sharedInstance.dictionary[Shared.selectedLanguage]?["English"]??"English",
                                           style: TextStyle(
                                             fontSize: 18,
                                             color: Color(Shared.color_primary1),
@@ -99,7 +100,7 @@ class _SelectLanguageScreenState extends State<SelectLanguageScreen> {
                                         Container(child: SvgPicture.asset("assets/icons/france_icon.svg"),width: 30,height: 30,),
                                         SizedBox(width: 15),
                                         Text(
-                                          "French",
+                                          sharedInstance.dictionary[Shared.selectedLanguage]?["French"]??"French",
                                           style: TextStyle(
                                             fontSize: 18,
                                             color: Color(Shared.color_primary1),
@@ -137,7 +138,7 @@ class _SelectLanguageScreenState extends State<SelectLanguageScreen> {
                                         Container(child: SvgPicture.asset("assets/icons/spain_icon.svg"),width: 30,height: 30,),
                                         SizedBox(width: 15),
                                         Text(
-                                          "Spanish",
+                                          sharedInstance.dictionary[Shared.selectedLanguage]?["Spanish"]??"Spanish",
                                           style: TextStyle(
                                             fontSize: 18,
                                             color: Color(Shared.color_primary1),
@@ -175,7 +176,7 @@ class _SelectLanguageScreenState extends State<SelectLanguageScreen> {
                                         Container(child: SvgPicture.asset("assets/icons/germany_icon.svg"),width: 30,height: 30,),
                                         SizedBox(width: 15),
                                         Text(
-                                          "German",
+                                          sharedInstance.dictionary[Shared.selectedLanguage]?["German"]??"German",
                                           style: TextStyle(
                                             fontSize: 18,
                                             color: Color(Shared.color_primary1),

@@ -16,8 +16,36 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
   DateTime dayFilter= DateTime.now().subtract(Duration(hours: DateTime.now().hour, minutes: DateTime.now().minute));
   DateFormat dateFormat = DateFormat("yyyy-MM-dd");
   
-  String getCategory(ApplicationCategory appCategory, bool isSysApp){
-    if(isSysApp){
+  String? getCategory(
+      ApplicationCategory appCategory, bool isSysApp, bool forDataBase) {
+    if (!forDataBase) {
+      if (isSysApp) {
+        return SharedData().dictionary[Shared.selectedLanguage]?["System"];
+      }
+      switch (appCategory) {
+        case ApplicationCategory.audio:
+          return SharedData().dictionary[Shared.selectedLanguage]?["Audio"];
+        case ApplicationCategory.game:
+          return SharedData().dictionary[Shared.selectedLanguage]?["Game"];
+        case ApplicationCategory.image:
+          return SharedData().dictionary[Shared.selectedLanguage]?["Image"];
+        case ApplicationCategory.maps:
+          return SharedData().dictionary[Shared.selectedLanguage]
+              ?["Navigation"];
+        case ApplicationCategory.news:
+          return SharedData().dictionary[Shared.selectedLanguage]?["News"];
+        case ApplicationCategory.productivity:
+          return SharedData().dictionary[Shared.selectedLanguage]
+              ?["Productivity"];
+        case ApplicationCategory.social:
+          return SharedData().dictionary[Shared.selectedLanguage]?["Social"];
+        case ApplicationCategory.video:
+          return SharedData().dictionary[Shared.selectedLanguage]?["Video"];
+        default:
+          return SharedData().dictionary[Shared.selectedLanguage]?["Unkown"];
+      }
+    }
+    if (isSysApp) {
       return "System";
     }
     switch (appCategory) {
@@ -63,7 +91,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                       filled: true,
                       prefixIcon: Icon(Icons.search_rounded, color: Color(Shared.color_primary1),),
                       fillColor: Colors.white,
-                      hintText: "Search by application",
+                      hintText: SharedData().dictionary[Shared.selectedLanguage]?["Search by application"]??"Search by application",
                       hintStyle: TextStyle(
                         fontSize: 15,
                         color: Color(Shared.color_primary1).withAlpha(128)
@@ -164,7 +192,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                     horizontal: 15, vertical: 10),
                                                 margin: const EdgeInsets.fromLTRB(
                                                     20, 5, 20, 0),
-                                                height: 120,
+                                                height: 125,
                                                 child: Column(
                                                   children: [
                                                     Row(
@@ -255,12 +283,14 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                     Column(
                                                       crossAxisAlignment: CrossAxisAlignment.start,
                                                       children: [
-                                                        Row(children: [
+                                                        Row(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
                                                           Expanded(
                                                             flex : 5,
                                                             child: RichText(
                                                               text: TextSpan(
-                                                                text: "Usage Percentage : ",
+                                                                text:  (SharedData().dictionary[Shared.selectedLanguage]?["Usage Percentage"]??"Usage Percentage")+" : ",
                                                                 style: TextStyle(
                                                                   color: Color(Shared.color_primary1),
                                                                   fontSize: 12,
@@ -278,7 +308,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                             child: 
                                                             RichText(
                                                               text: TextSpan(
-                                                                text:  "Used For : ",
+                                                                text: (SharedData().dictionary[Shared.selectedLanguage]?["Used For"]??"Used For") + " : ",
                                                                 style: TextStyle(
                                                                   color: Color(Shared.color_primary1),
                                                                   fontSize: 12,
@@ -299,13 +329,13 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                         
                                                         RichText(
                                                               text: TextSpan(
-                                                                text:  "category : ",
+                                                                text:  (SharedData().dictionary[Shared.selectedLanguage]?["Category"]??"Category")+" : ",
                                                                 style: TextStyle(
                                                                   color: Color(Shared.color_primary1),
                                                                   fontSize: 12,
                                                                 ),
                                                                 children: <TextSpan>[
-                                                                  TextSpan(text: getCategory(appSecondaryData.category, appSecondaryData.systemApp), style: TextStyle(fontWeight: FontWeight.w600)),
+                                                                  TextSpan(text: getCategory(appSecondaryData.category, appSecondaryData.systemApp, false), style: TextStyle(fontWeight: FontWeight.w600)),
                                                                 ],
                                                               ),
                                                             )

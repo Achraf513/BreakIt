@@ -11,13 +11,6 @@ class AddNewRule extends StatefulWidget {
 }
 
 class _AddNewRuleState extends State<AddNewRule> {
-  String notificationFrequency = "Once daily";
-  String hoursSelected = "1 Hour";
-  String minutesSelected = "15 Min";
-  AppUsageInfo appSelected = SharedData().applications.last;
-  var hours = ["0 Hours","1 Hour","2 Hours","3 Hours","4 Hours","5 Hours","6 Hours","7 Hours","8 Hours","9 Hours","10 Hours","11 Hours","12 Hours"];
-  var minutes = ["5 Min","10 Min","15 Min","20 Min","25 Min","30 Min","35 Min","40 Min","45 Min","50 Min","55 Min"];
-  var notificationFrequencies =  ['Once daily','Twice daily','3 times a day','4 times a day','5 times a day'];
 
   // ignore: must_call_super
   void initState(){
@@ -31,12 +24,41 @@ class _AddNewRuleState extends State<AddNewRule> {
 
   @override
   Widget build(BuildContext context) {
+  String notificationFrequency = SharedData().dictionary[Shared.selectedLanguage]?["Once daily"]??"Once daily";
+  String hoursSelected = "1 "+(SharedData().dictionary[Shared.selectedLanguage]?["Hour"]??"Hour");
+  String minutesSelected = "15 Min";
+  AppUsageInfo appSelected = SharedData().applications.last;
+  var hours = [
+    "0 "+(SharedData().dictionary[Shared.selectedLanguage]?["Hours"]??"Hours"),
+    "1 "+(SharedData().dictionary[Shared.selectedLanguage]?["Hour"]??"Hour"),
+    "2 "+(SharedData().dictionary[Shared.selectedLanguage]?["Hours"]??"Hours"),
+    "3 "+(SharedData().dictionary[Shared.selectedLanguage]?["Hours"]??"Hours"),
+    "4 "+(SharedData().dictionary[Shared.selectedLanguage]?["Hours"]??"Hours"),
+    "5 "+(SharedData().dictionary[Shared.selectedLanguage]?["Hours"]??"Hours"),
+    "6 "+(SharedData().dictionary[Shared.selectedLanguage]?["Hours"]??"Hours"),
+    "7 "+(SharedData().dictionary[Shared.selectedLanguage]?["Hours"]??"Hours"),
+    "8 "+(SharedData().dictionary[Shared.selectedLanguage]?["Hours"]??"Hours"),
+    "9 "+(SharedData().dictionary[Shared.selectedLanguage]?["Hours"]??"Hours"),
+    "10 "+(SharedData().dictionary[Shared.selectedLanguage]?["Hours"]??"Hours"),
+    "11 "+(SharedData().dictionary[Shared.selectedLanguage]?["Hours"]??"Hours"),
+    "12 "+(SharedData().dictionary[Shared.selectedLanguage]?["Hours"]??"Hours")];
+
+  var minutes = ["0 Min","5 Min","10 Min","15 Min","20 Min","25 Min","30 Min","35 Min","40 Min","45 Min","50 Min","55 Min"];
+
+  var notificationFrequencies =  [
+    SharedData().dictionary[Shared.selectedLanguage]?["Once daily"]??"Once daily",
+    SharedData().dictionary[Shared.selectedLanguage]?["Twice daily"]??"Twice daily",
+    SharedData().dictionary[Shared.selectedLanguage]?["3 times a day"]??"3 times a day",
+    SharedData().dictionary[Shared.selectedLanguage]?["4 times a day"]??"4 times a day",
+    SharedData().dictionary[Shared.selectedLanguage]?["5 times a day"]??"5 times a day",
+  ];
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: Color(Shared.color_primary1),
         title: Text(
-          "New Rule"
+          SharedData().dictionary[Shared.selectedLanguage]?["New Rule"]??"New Rule",
         ),
         leading: IconButton(
           onPressed: () {
@@ -59,7 +81,7 @@ class _AddNewRuleState extends State<AddNewRule> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Application",
+                    SharedData().dictionary[Shared.selectedLanguage]?["Application"]??"Application",
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
@@ -128,7 +150,7 @@ class _AddNewRuleState extends State<AddNewRule> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Usage Limit",
+                    SharedData().dictionary[Shared.selectedLanguage]?["Usage Limit"]??"Usage Limit",
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
@@ -225,7 +247,7 @@ class _AddNewRuleState extends State<AddNewRule> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Notification Frequency",
+                    SharedData().dictionary[Shared.selectedLanguage]?["Notification Frequency"]??"Notification Frequency",
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
@@ -338,7 +360,9 @@ class _AddNewRuleState extends State<AddNewRule> {
                     borderRadius: BorderRadius.circular(15)
                   ),
                   margin: EdgeInsets.symmetric(horizontal: 5),
-                  child: Center(child: Text("Cancel",style: TextStyle(color: Colors.white),)),
+                  child: Center(child: Text(
+                    SharedData().dictionary[Shared.selectedLanguage]?["Cancel"]??"Cancel",
+                  style: TextStyle(color: Colors.white),)),
                 ),
               ),
             ),
@@ -351,7 +375,9 @@ class _AddNewRuleState extends State<AddNewRule> {
                   borderRadius: BorderRadius.circular(15)
                 ),
                 margin: EdgeInsets.symmetric(horizontal: 5),
-                child: Center(child: Text("Submit",style: TextStyle(color: Colors.white),)),
+                child: Center(child: Text(
+                  SharedData().dictionary[Shared.selectedLanguage]?["Submit"]??"Submit",
+                  style: TextStyle(color: Colors.white),)),
               ),
             ),
           ],),
