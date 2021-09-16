@@ -71,7 +71,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Container(
               decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
-                  color: Color(Shared.color_primary1)),
+                  color: Color(Shared.colorPrimaryText)),
               width: double.infinity,
               height: 50,
               child: Row(
@@ -91,7 +91,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Container(
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    color: Color(Shared.color_primary2)),
+                    color: Color(Shared.colorSecondary2BackGround)),
                 width: double.infinity,
                 height: 50,
                 child: Padding(
@@ -101,7 +101,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Expanded(
                         flex: 1,
                         child: Icon(Icons.arrow_back_ios_new_rounded,
-                            color: Color(Shared.color_primary1)),
+                            color: Color(Shared.colorPrimaryText)),
                       ),
                       Expanded(
                           flex: 8,
@@ -109,12 +109,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               child: Text(
                             "04-10 July 2021",
                             style: TextStyle(
-                                color: Color(Shared.color_primary1)),
+                                color: Color(Shared.colorPrimaryText)),
                           ))),
                       Expanded(
                         flex: 1,
                         child: Icon(Icons.arrow_forward_ios_rounded,
-                            color: Color(Shared.color_primary1)),
+                            color: Color(Shared.colorPrimaryText)),
                       ),
                     ],
                   ),
@@ -194,7 +194,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     getDrawingHorizontalLine: (value) {
                                       return FlLine(
                                           color:
-                                              Color(Shared.color_secondary2),
+                                              Color(Shared.colorSecondaryBackGround),
                                           strokeWidth: 0.25);
                                     },
                                   ), //2mk6RpQJ
@@ -204,7 +204,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       bottom: BorderSide(
                                           width: 0.25,
                                           color: Color(
-                                              Shared.color_secondary2)),
+                                              Shared.colorSecondaryBackGround)),
                                     ),
                                   ),
                                   //TO-DO make it dynamic
@@ -229,18 +229,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                             strokeWidth: 1.5,
                                             color: Colors.white,
                                             strokeColor: Color(
-                                                Shared.color_primary1),
+                                                Shared.colorPrimaryText),
                                           );
                                         }),
                                         isCurved: true,
                                         belowBarData: BarAreaData(
                                             show: true,
                                             colors: [
-                                              Color(Shared.color_primary1)
+                                              Color(Shared.colorPrimaryText)
                                                   .withOpacity(0.05)
                                             ]),
                                         colors: [
-                                          Color(Shared.color_primary1)
+                                          Color(Shared.colorPrimaryText)
                                         ])
                                   ])),
                             ),
@@ -491,7 +491,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             width: MediaQuery.of(context).size.width / 3,
                             child: CircularProgressIndicator(
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(Shared.color_primary1)),
+                                  Color(Shared.colorPrimaryText)),
                             ),
                           ),
                         ),
@@ -506,7 +506,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           width: MediaQuery.of(context).size.width / 3,
                           child: CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(Shared.color_primary1)),
+                                Color(Shared.colorPrimaryText)),
                           ),
                         ),
                       ),
@@ -529,7 +529,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontSize: 18,
               fontWeight: FontWeight.w600,
               fontFamily: "Yu Gothic UI",
-              color: Color(Shared.color_primary1)),
+              color: Color(Shared.colorPrimaryText)),
         ),
         SizedBox(
           height: 10,
@@ -541,7 +541,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Container(
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    color: Color(Shared.color_primary2)),
+                    color: Color(Shared.colorSecondaryBackGround)),
                 height: 70,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -559,7 +559,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               fontFamily: "Yu Gothic UI",
-                              color: Color(Shared.color_primary1)),
+                              color: Color(Shared.colorPrimaryText)),
                         ),
                         Text(
                           timesUnlocked,
@@ -567,7 +567,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               fontFamily: "Yu Gothic UI",
-                              color: Color(Shared.color_secondary2)),
+                              color: Color(Shared.colorPrimaryText)),
                         ),
                       ],
                     )
@@ -583,7 +583,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Container(
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    color: Color(Shared.color_primary2)),
+                    color: Color(Shared.colorSecondaryBackGround)),
                 height: 70,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -601,7 +601,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               fontFamily: "Yu Gothic UI",
-                              color: Color(Shared.color_primary1)),
+                              color: Color(Shared.colorPrimaryText)),
                         ),
                         Text(
                           timeOn,
@@ -609,7 +609,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               fontFamily: "Yu Gothic UI",
-                              color: Color(Shared.color_secondary2)),
+                              color: Color(Shared.colorSecondary2BackGround)),
                         ),
                       ],
                     )
@@ -645,7 +645,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               text,
               style: TextStyle(
                 color: id == selectedFilterId
-                    ? Color(Shared.color_primary1)
+                    ? Color(Shared.colorPrimaryText)
                     : Colors.white,
               ),
             )),

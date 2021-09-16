@@ -1,12 +1,14 @@
-import 'package:break_it/Screens/HomeScreen.dart';
 import 'package:break_it/Screens/grantPermession.dart';
-import 'package:break_it/Shared/database.dart';
+import 'package:break_it/Shared/Shared.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();  
+  await Shared().initShared();
   runApp(MyApp());
 }
-
 
 
 class MyApp extends StatelessWidget { 
@@ -27,10 +29,9 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> { 
-
+  
   @override
   Widget build(BuildContext context) {
-    
     return GrantPermession();
   }
 }

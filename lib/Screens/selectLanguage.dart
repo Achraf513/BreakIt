@@ -1,4 +1,5 @@
 import 'package:break_it/Shared/Shared.dart';
+import 'package:break_it/Shared/database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -14,11 +15,13 @@ class _SelectLanguageScreenState extends State<SelectLanguageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+        backgroundColor: Color(Shared.colorPrimaryBackGround),
         appBar: AppBar(
           centerTitle: true,
-          backgroundColor: Color(Shared.color_primary1),
-          title: Text(sharedInstance.dictionary[Shared.selectedLanguage]?["Settings"]??"Settings"),
+          backgroundColor: Color(Shared.colorUi),
+          title: Text(sharedInstance.dictionary[Shared.selectedLanguage]
+                  ?["Settings"] ??
+              "Settings"),
           leading: IconButton(
             onPressed: () {
               Navigator.pop(context);
@@ -34,39 +37,57 @@ class _SelectLanguageScreenState extends State<SelectLanguageScreen> {
                     children: [
                       SizedBox(height: 10),
                       Text(
-                        sharedInstance.dictionary[Shared.selectedLanguage]?["Language"]??"Language",
+                        sharedInstance.dictionary[Shared.selectedLanguage]
+                                ?["Language"] ??
+                            "Language",
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
-                          color: Color(Shared.color_primary1),
+                          color: Color(Shared.colorPrimaryText),
                         ),
                       ),
                       SizedBox(height: 25),
-                      Container(
-                        color: Shared.selectedLanguage=="English"?Colors.grey[200]:Colors.white,
-                        child: Column(
-                          children: [
-                            Divider(height: 0,),
-                            Container(
-                              padding : EdgeInsets.symmetric(horizontal: 0, vertical: 10),
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                     Shared.selectedLanguage = "English";
-                                  });
-                                },
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            Shared.selectedLanguage = "English";
+                             DataBase.instance.updateSelectedLanguage();
+                          });
+                        },
+                        child: Container(
+                          color: Shared.selectedLanguage == "English"
+                              ? Color(Shared.colorSecondaryBackGround)
+                              : Color(Shared.colorPrimaryBackGround),
+                          child: Column(
+                            children: [
+                              Divider(
+                                  height: 0,
+                                  color: Color(Shared.colorPrimaryText)
+                                      .withAlpha(160)),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 0, vertical: 10),
                                 child: Row(
                                   children: [
                                     Row(
                                       children: [
-                                        SizedBox(width:5),
-                                        Container(child: SvgPicture.asset("assets/icons/uk_icon.svg"),width: 30,height: 30,),
+                                        SizedBox(width: 5),
+                                        Container(
+                                          child: SvgPicture.asset(
+                                              "assets/icons/uk_icon.svg"),
+                                          width: 30,
+                                          height: 30,
+                                        ),
                                         SizedBox(width: 15),
                                         Text(
-                                          sharedInstance.dictionary[Shared.selectedLanguage]?["English"]??"English",
+                                          sharedInstance.dictionary[
+                                                      Shared.selectedLanguage]
+                                                  ?["English"] ??
+                                              "English",
                                           style: TextStyle(
                                             fontSize: 18,
-                                            color: Color(Shared.color_primary1),
+                                            color:
+                                                Color(Shared.colorPrimaryText),
                                           ),
                                         ),
                                       ],
@@ -74,36 +95,55 @@ class _SelectLanguageScreenState extends State<SelectLanguageScreen> {
                                   ],
                                 ),
                               ),
-                            ),
-                            Divider(height:0)
-                          ],
+                              Divider(
+                                  height: 0,
+                                  color: Color(Shared.colorPrimaryText)
+                                      .withAlpha(160))
+                            ],
+                          ),
                         ),
                       ),
-                      Container(
-                        color: Shared.selectedLanguage=="French"?Colors.grey[200]:Colors.white,
-                        child: Column(
-                          children: [
-                            Divider(height: 0,),
-                            Container(
-                              padding : EdgeInsets.symmetric(horizontal: 0, vertical: 10),
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                     Shared.selectedLanguage = "French";
-                                  });
-                                },
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            Shared.selectedLanguage = "French";
+                             DataBase.instance.updateSelectedLanguage();
+                          });
+                        },
+                        child: Container(
+                          color: Shared.selectedLanguage == "French"
+                              ? Color(Shared.colorSecondaryBackGround)
+                              : Color(Shared.colorPrimaryBackGround),
+                          child: Column(
+                            children: [
+                              Divider(
+                                  height: 0,
+                                  color: Color(Shared.colorPrimaryText)
+                                      .withAlpha(160)),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 0, vertical: 10),
                                 child: Row(
                                   children: [
                                     Row(
                                       children: [
-                                        SizedBox(width:5),
-                                        Container(child: SvgPicture.asset("assets/icons/france_icon.svg"),width: 30,height: 30,),
+                                        SizedBox(width: 5),
+                                        Container(
+                                          child: SvgPicture.asset(
+                                              "assets/icons/france_icon.svg"),
+                                          width: 30,
+                                          height: 30,
+                                        ),
                                         SizedBox(width: 15),
                                         Text(
-                                          sharedInstance.dictionary[Shared.selectedLanguage]?["French"]??"French",
+                                          sharedInstance.dictionary[
+                                                      Shared.selectedLanguage]
+                                                  ?["French"] ??
+                                              "French",
                                           style: TextStyle(
                                             fontSize: 18,
-                                            color: Color(Shared.color_primary1),
+                                            color:
+                                                Color(Shared.colorPrimaryText),
                                           ),
                                         ),
                                       ],
@@ -111,37 +151,55 @@ class _SelectLanguageScreenState extends State<SelectLanguageScreen> {
                                   ],
                                 ),
                               ),
-                            ),
-                            Divider(height:0)
-                          ],
+                              Divider(
+                                  height: 0,
+                                  color: Color(Shared.colorPrimaryText)
+                                      .withAlpha(160))
+                            ],
+                          ),
                         ),
                       ),
-                      
-                      Container(
-                        color: Shared.selectedLanguage=="Spanish"?Colors.grey[200]:Colors.white,
-                        child: Column(
-                          children: [
-                            Divider(height: 0,),
-                            Container(
-                              padding : EdgeInsets.symmetric(horizontal: 0, vertical: 10),
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                     Shared.selectedLanguage = "Spanish";
-                                  });
-                                },
+                      GestureDetector(
+                        onTap: () {
+                          setState(()  {
+                            Shared.selectedLanguage = "Spanish";
+                             DataBase.instance.updateSelectedLanguage();
+                          });
+                        },
+                        child: Container(
+                          color: Shared.selectedLanguage == "Spanish"
+                              ? Color(Shared.colorSecondaryBackGround)
+                              : Color(Shared.colorPrimaryBackGround),
+                          child: Column(
+                            children: [
+                              Divider(
+                                  height: 0,
+                                  color: Color(Shared.colorPrimaryText)
+                                      .withAlpha(160)),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 0, vertical: 10),
                                 child: Row(
                                   children: [
                                     Row(
                                       children: [
-                                        SizedBox(width:5),
-                                        Container(child: SvgPicture.asset("assets/icons/spain_icon.svg"),width: 30,height: 30,),
+                                        SizedBox(width: 5),
+                                        Container(
+                                          child: SvgPicture.asset(
+                                              "assets/icons/spain_icon.svg"),
+                                          width: 30,
+                                          height: 30,
+                                        ),
                                         SizedBox(width: 15),
                                         Text(
-                                          sharedInstance.dictionary[Shared.selectedLanguage]?["Spanish"]??"Spanish",
+                                          sharedInstance.dictionary[
+                                                      Shared.selectedLanguage]
+                                                  ?["Spanish"] ??
+                                              "Spanish",
                                           style: TextStyle(
                                             fontSize: 18,
-                                            color: Color(Shared.color_primary1),
+                                            color:
+                                                Color(Shared.colorPrimaryText),
                                           ),
                                         ),
                                       ],
@@ -149,37 +207,55 @@ class _SelectLanguageScreenState extends State<SelectLanguageScreen> {
                                   ],
                                 ),
                               ),
-                            ),
-                            Divider(height:0)
-                          ],
+                              Divider(
+                                  height: 0,
+                                  color: Color(Shared.colorPrimaryText)
+                                      .withAlpha(160))
+                            ],
+                          ),
                         ),
                       ),
-                      
-                      Container(
-                        color: Shared.selectedLanguage=="German"?Colors.grey[200]:Colors.white,
-                        child: Column(
-                          children: [
-                            Divider(height: 0,),
-                            Container(
-                              padding : EdgeInsets.symmetric(horizontal: 0, vertical: 10),
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                     Shared.selectedLanguage = "German";
-                                  });
-                                },
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            Shared.selectedLanguage = "German";
+                            DataBase.instance.updateSelectedLanguage();
+                          });
+                        },
+                        child: Container(
+                          color: Shared.selectedLanguage == "German"
+                              ? Color(Shared.colorSecondaryBackGround)
+                              : Color(Shared.colorPrimaryBackGround),
+                          child: Column(
+                            children: [
+                              Divider(
+                                  height: 0,
+                                  color: Color(Shared.colorPrimaryText)
+                                      .withAlpha(160)),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 0, vertical: 10),
                                 child: Row(
                                   children: [
                                     Row(
                                       children: [
-                                        SizedBox(width:5),
-                                        Container(child: SvgPicture.asset("assets/icons/germany_icon.svg"),width: 30,height: 30,),
+                                        SizedBox(width: 5),
+                                        Container(
+                                          child: SvgPicture.asset(
+                                              "assets/icons/germany_icon.svg"),
+                                          width: 30,
+                                          height: 30,
+                                        ),
                                         SizedBox(width: 15),
                                         Text(
-                                          sharedInstance.dictionary[Shared.selectedLanguage]?["German"]??"German",
+                                          sharedInstance.dictionary[
+                                                      Shared.selectedLanguage]
+                                                  ?["German"] ??
+                                              "German",
                                           style: TextStyle(
                                             fontSize: 18,
-                                            color: Color(Shared.color_primary1),
+                                            color:
+                                                Color(Shared.colorPrimaryText),
                                           ),
                                         ),
                                       ],
@@ -187,9 +263,12 @@ class _SelectLanguageScreenState extends State<SelectLanguageScreen> {
                                   ],
                                 ),
                               ),
-                            ),
-                            Divider(height:0)
-                          ],
+                              Divider(
+                                  height: 0,
+                                  color: Color(Shared.colorPrimaryText)
+                                      .withAlpha(160))
+                            ],
+                          ),
                         ),
                       ),
                     ]))));

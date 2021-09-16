@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "324605441566",
+    "project_id": "breakit513",
+    "storage_bucket": "breakit513.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:324605441566:android:39c738b6afd34dab41e00f",
+        "android_client_info": {
+          "package_name": "com.example.break_it"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "324605441566-eck4g8qdhmhhl1ahjl0k3spk61rcl3p2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3le8ataa7Jm72nhKltdAwVOzANd_htk8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "324605441566-eck4g8qdhmhhl1ahjl0k3spk61rcl3p2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

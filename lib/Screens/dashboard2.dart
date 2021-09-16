@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:math';
 
 import 'package:app_usage/app_usage.dart';
@@ -11,6 +10,7 @@ import 'package:device_apps/device_apps.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -21,7 +21,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   static DateTime startOfTheWeek = DateTime.now();
-  DateFormat dateFormat = DateFormat("MM/dd");
+  late DateFormat dateFormat;
   int selectedFilterId = 0;
   int totalAvarageUsage = 0;
   static SharedData sharedInstance = SharedData();
@@ -34,14 +34,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   static final _sharedData = SharedData();
 
-  // ignore: must_call_super
   void initState() {
+    super.initState();
     DateTime now = DateTime.now();
     startOfTheWeek =
-        startOfTheWeek.subtract(Duration(hours: now.hour, minutes: now.minute));
+        now.subtract(Duration(hours: now.hour, minutes: now.minute));
     while (startOfTheWeek.weekday != DateTime.monday) {
       startOfTheWeek = startOfTheWeek.subtract(Duration(days: 1));
     }
+    initializeDateFormatting();
+    dateFormat = DateFormat("dd MMMM","en");
   }
 
   static String? getCategory(
@@ -98,72 +100,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Future<String?> getAvarageThisWeekCategory() async {
-    String test = await DataBase.instance.getThisWeeksCategory()??"";
-    return sharedInstance.dictionary[Shared.selectedLanguage]?[test];
-  }
-
-  Future<String?> getTodayCategory() async {
-    String test = await DataBase.instance.getTodaysDailyCategory()??"";
-    return sharedInstance.dictionary[Shared.selectedLanguage]?[test];
-  }
-
-  Future<String> getAvarageThisWeekTimeOn() async {
-    DateTime now = DateTime.now();
-    DateTime startOfthisWeek =
-        now.subtract(Duration(hours: now.hour, minutes: now.minute));
-    while (startOfthisWeek.weekday != DateTime.monday) {
-      startOfthisWeek = startOfthisWeek.subtract(Duration(days: 1));
-    }
-    //This.idWeek = ThisWeeksLastDay.substract(Duratuin(hours : 24))
-    String idWeek = startOfthisWeek.day.toString() +
-        startOfthisWeek.month.toString() +
-        startOfthisWeek.add(Duration(days: 6)).day.toString() +
-        startOfthisWeek.add(Duration(days: 6)).month.toString() +
-        startOfthisWeek.year.toString();
-
-    List<WeeklyInfo>? result = await DataBase.instance.readWeeklyInfo(idWeek);
-    if (result != null) {
-      if (result.last.pos ==
-          DateTime.now().difference(startOfthisWeek).inDays) {
-        int totalUsage = 0;
-        for (var weeklyInfo in result) {
-          int usage = (weeklyInfo.usageInHours * 60).toInt();
-          totalUsage += usage;
-        }
-        totalUsage = totalUsage ~/ result.length;
-        int totalHours = (totalUsage ~/ 60);
-        int totalMinutes = totalUsage - (totalUsage ~/ 60) * 60;
-        String hoursText = totalHours != 0 ? totalHours.toString() + "h" : "";
-        String minutesText =
-            totalMinutes != 0 ? totalMinutes.toString() + "min" : "";
-        return hoursText + minutesText;
-      } else {
-        Future.delayed(Duration(seconds: 3));
-        return getAvarageThisWeekTimeOn();
-      }
-    } else {
-      Future.delayed(Duration(seconds: 3));
-      return getAvarageThisWeekTimeOn();
-    }
-  }
-
-  Future<String> getTodayTimeOn() async {
-    WeeklyInfo? todaysWeeklyInfo =
-        await DataBase.instance.getTodaysWeeklyInfo();
-    if (todaysWeeklyInfo != null) {
-      int usage = (todaysWeeklyInfo.usageInHours * 60).toInt();
-      int hours = usage ~/ 60;
-      int minutes = usage - (usage ~/ 60) * 60;
-      String hoursText = hours != 0 ? hours.toString() + "h" : "";
-      String minutesText = minutes != 0 ? minutes.toString() + "min" : "";
-      return hoursText + minutesText;
-    } else {
-      Future.delayed(Duration(seconds: 3));
-      return getTodayTimeOn();
-    }
-  }
-
+ 
   static Future updateTodaysData() async {
     DateTime today = DateTime.now().subtract(
         Duration(hours: DateTime.now().hour, minutes: DateTime.now().minute));
@@ -202,7 +139,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       DataBase.instance.updateWeeklyInfo(weeklyInfo);
     }
   }
-
+  List<WeeklyInfo> filterUnique(List<WeeklyInfo> data){
+    Map<double,WeeklyInfo> newData = {};
+    for(WeeklyInfo weeklyInfo in data){
+      if(newData.keys.contains(weeklyInfo.pos)){
+        continue;
+      }
+      newData[weeklyInfo.pos] = weeklyInfo;
+    }
+    return newData.values.toList();
+  }
   static Future<List<WeeklyInfo>> getWeeklyUsage() async {
     List<List<double>> weeklyUsage = [
       [0, 0],
@@ -221,7 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     List<WeeklyInfo>? result = await DataBase.instance.readWeeklyInfo(idWeek);
     if (result != null) {
-      Generaldata? lastCheck = await DataBase.instance.getLastCheckDashBoard();
+      Generaldata? lastCheck = await DataBase.instance.getGeneralData("LastCheckDashBoard");
       if (lastCheck != null) {
         if (DateTime.now()
             .subtract(Duration(minutes: 10))
@@ -265,7 +211,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
         weeklyUsage[i][1] = totalUsageLocal / 60 < 14
             ? totalUsageLocal / 60
-            : 2 + Random().nextDouble() * 10;
+            : 6 + Random().nextDouble() * 4;
 
         WeeklyInfo weeklyInfo = WeeklyInfo(
             idWeek: startOfTheWeek.day.toString() +
@@ -287,37 +233,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+//adb shell pm dump com.facebook.katana | grep 'lastTimeUsed' | tail -1
+//adb shell pm dump com.facebook.katana | grep 'RESUMED' | tail -1 | cut -c10-30
   @override
   Widget build(BuildContext context) {
-    String idWeek = startOfTheWeek.day.toString() +
-        startOfTheWeek.month.toString() +
-        startOfTheWeek.add(Duration(days: 6)).day.toString() +
-        startOfTheWeek.add(Duration(days: 6)).month.toString() +
-        startOfTheWeek.year.toString();
-    print(idWeek);
-    DateTime now = DateTime.now();
-    DateTime startOfThisWeek =
-        now.subtract(Duration(hours: now.hour, minutes: now.minute));
-    while (startOfThisWeek.weekday != DateTime.monday) {
-      startOfThisWeek = startOfThisWeek.subtract(Duration(days: 1));
+    Shared.blockUser = true;
+    String local = "en";
+    switch(Shared.selectedLanguage){
+      case "English":
+        local = "en";
+        break;
+      case "Dutch":
+        local = "de_AT";
+        break;
+      case "French":
+        local = "fr";
+        break;
+      case "Spanish":
+        local = "es_US";
+        break;
     }
-    String idThisWeek = startOfThisWeek.day.toString() +
-        startOfThisWeek.month.toString() +
-        startOfThisWeek.add(Duration(days: 6)).day.toString() +
-        startOfThisWeek.add(Duration(days: 6)).month.toString() +
-        startOfThisWeek.year.toString();
-
+    dateFormat = DateFormat("dd MMMM",local);
     _sharedData.totalUsage = 0;
     return Scaffold(
+        backgroundColor: Color(Shared.colorPrimaryBackGround),
         body: SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20),
-        child: Column(
-          children: [
-            // Button-Controller
-            // Button-Controller
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20),
+            child: Column(
+              children: [
+                // Button-Controller
+                // Button-Controller
 
-            /* Container(
+                /* Container(
               decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   color: Color(Shared.color_primaryViolet)),
@@ -336,519 +284,645 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             */
 
-            // Date Filter-Controller
-            // Date Filter-Controller
-            Container(
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Color(Shared.color_primary2)),
-                width: double.infinity,
-                height: 50,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 1,
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              startOfTheWeek =
-                                  startOfTheWeek.subtract(Duration(days: 7));
-                            });
-                          },
-                          child: Icon(Icons.arrow_back_ios_new_rounded,
-                              color: Color(Shared.color_primary1)),
-                        ),
-                      ),
-                      Expanded(
-                          flex: 8,
-                          child: Center(
-                              child: Text(
-                            dateFormat.format(startOfTheWeek) +
-                                " - " +
-                                dateFormat.format(
-                                    startOfTheWeek.add(Duration(days: 6))) +
-                                " : " +
-                                startOfTheWeek.year.toString(),
-                            style:
-                                TextStyle(color: Color(Shared.color_primary1)),
-                          ))),
-                      Expanded(
-                        flex: 1,
-                        child: GestureDetector(
-                            onTap: () {
-                              if (idThisWeek != idWeek) {
-                                setState(() {
-                                  startOfTheWeek =
-                                      startOfTheWeek.add(Duration(days: 7));
-                                });
-                              }
-                            },
-                            child: Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              color: idThisWeek != idWeek
-                                  ? Color(Shared.color_primary1)
-                                  : Colors.grey,
-                            )),
-                      ),
-                    ],
-                  ),
-                )),
-            SizedBox(
-              height: 50,
-            ),
-            FutureBuilder(
-                future: getWeeklyUsage(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    if (snapshot.hasError) {
-                      return Center(
-                        child: Text(
-                          '${snapshot.error} occured',
-                          style: TextStyle(fontSize: 18),
-                        ),
-                      );
-                    } else if (snapshot.hasData) {
-                      final data = snapshot.data as List<WeeklyInfo>;
-                      return Container(
-                        margin: EdgeInsets.fromLTRB(0, 0, 5, 0),
-                        width: double.infinity,
-                        height: 160,
-                        child: AbsorbPointer(
-                          absorbing: true,
-                          child: LineChart(LineChartData(
-                              gridData: FlGridData(
-                                show: true,
-                                getDrawingHorizontalLine: (value) {
-                                  return FlLine(
-                                      color: Color(Shared.color_secondary2),
-                                      strokeWidth: 0.25);
-                                },
-                              ), //2mk6RpQJ
-                              borderData: FlBorderData(
-                                show: true,
-                                border: Border(
-                                  bottom: BorderSide(
-                                      width: 0.25,
-                                      color: Color(Shared.color_secondary2)),
-                                  top: BorderSide(
-                                      width: 0.25,
-                                      color: Color(Shared.color_secondary2)),
-                                ),
-                              ),
-                              //TO-DO make it dynamic
-                              minX: -1,
-                              maxX: 7,
-                              minY: 0,
-                              maxY: 8,
-                              titlesData: LineTitles.getTitleData(),
-                              lineBarsData: [
-                                LineChartBarData(
-                                    spots: data.map((e) {
-                                      return FlSpot(e.pos, e.usageInHours / 3);
-                                    }).toList(),
-                                    dotData: FlDotData(getDotPainter:
-                                        (FlSpot spot, double xPercentage,
-                                            LineChartBarData bar, int index,
-                                            {double? size}) {
-                                      return FlDotCirclePainter(
-                                        radius: size,
-                                        strokeWidth: 1.5,
-                                        color: Colors.white,
-                                        strokeColor:
-                                            Color(Shared.color_primary1),
-                                      );
-                                    }),
-                                    isCurved: true,
-                                    belowBarData: BarAreaData(
-                                        show: true,
-                                        colors: [
-                                          Color(Shared.color_primary1)
-                                              .withOpacity(0.05)
-                                        ]),
-                                    colors: [Color(Shared.color_primary1)])
-                              ])),
-                        ),
-                      );
-                    } else {
-                      return Center(
-                          child: Container(
-                        height: 160,
-                        child: Center(
-                          child: Container(
-                            height: 150,
-                            width: 150,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(Shared.color_primary1)),
-                            ),
-                          ),
-                        ),
-                      ));
-                    }
-                  } else {
-                    return Center(
-                        child: Container(
-                      height: 160,
-                      child: Center(
-                        child: Container(
-                          height: 150,
-                          width: 150,
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(Shared.color_primary1)),
-                          ),
-                        ),
-                      ),
-                    ));
+                // Date Filter-Controller
+                // Date Filter-Controller
+                StatefulBuilder(
+                    builder: (BuildContext context, StateSetter setState) {
+                  Shared.blockUser = true;
+                  String idWeek = startOfTheWeek.day.toString() +
+                      startOfTheWeek.month.toString() +
+                      startOfTheWeek.add(Duration(days: 6)).day.toString() +
+                      startOfTheWeek.add(Duration(days: 6)).month.toString() +
+                      startOfTheWeek.year.toString();
+                  DateTime now = DateTime.now();
+                  DateTime startOfThisWeek = now
+                      .subtract(Duration(hours: now.hour, minutes: now.minute));
+                  while (startOfThisWeek.weekday != DateTime.monday) {
+                    startOfThisWeek =
+                        startOfThisWeek.subtract(Duration(days: 1));
                   }
-                }),
-            Column(children: [
-              //General Data
-              //General Data
-              SizedBox(
-                height: 60,
-              ),
-              Divider(
-                thickness: 1,
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              drawGenerals(
-                  sharedInstance.dictionary[Shared.selectedLanguage]
-                          ?["TODAY'S STATES"] ??
-                      "",
-                  getTodayCategory(),
-                  getTodayTimeOn()),
-              SizedBox(
-                height: 20,
-              ),
-              drawGenerals(
-                  sharedInstance.dictionary[Shared.selectedLanguage]
-                          ?["AVERAGE THIS WEEK"] ??
-                      "",
-                  getAvarageThisWeekCategory(),
-                  getAvarageThisWeekTimeOn()),
-              SizedBox(
-                height: 20,
-              ),
-              Divider(
-                thickness: 1,
-              ),
-            ]),
-            FutureBuilder(
-                future: _sharedData.getUsageStats(
-                    dayFilter.subtract(Duration(days: 1)), dayFilter, true),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    // If we got an error
-                    if (snapshot.hasError) {
-                      return Center(
-                        child: Text(
-                          '${snapshot.error} occured',
-                          style: TextStyle(fontSize: 18),
-                        ),
-                      );
-                      // if we got our data
-                    } else if (snapshot.hasData) {
-                      final data = snapshot.data as List<AppUsageInfo>;
-                      int other = 100;
-                      List<List<int>> appsData = [];
-                      if (data.length != 0) {
-                        for (var i = 1; i < 5; i++) {
-                          other -= ((data[data.length - i].usage.inMinutes /
-                                      _sharedData.totalUsage) *
-                                  100)
-                              .round();
-                        }
-                        appsData = [
-                          [
-                            Shared.pieChartColor_blue,
-                            ((data[data.length - 1].usage.inMinutes /
-                                        _sharedData.totalUsage) *
-                                    100)
-                                .round()
-                          ],
-                          [
-                            Shared.pieChartColor_violet,
-                            ((data[data.length - 2].usage.inMinutes /
-                                        _sharedData.totalUsage) *
-                                    100)
-                                .round()
-                          ],
-                          [
-                            Shared.pieChartColor_red,
-                            ((data[data.length - 3].usage.inMinutes /
-                                        _sharedData.totalUsage) *
-                                    100)
-                                .round()
-                          ],
-                          [
-                            Shared.pieChartColor_yellow,
-                            ((data[data.length - 4].usage.inMinutes /
-                                        _sharedData.totalUsage) *
-                                    100)
-                                .round()
-                          ],
-                          [Shared.pieChartColor_green, other]
-                        ];
-                      } else {
-                        return SizedBox();
-                      }
-                      return Column(
-                        children: [
-                          //Pie-Chart
-                          //Pie-Chart
-                          //TO-DO : make it dynamic
-                          SizedBox(
-                            height: 30,
-                          ),
-                          Row(
-                            children: [
-                              Container(
-                                  width:
-                                      MediaQuery.of(context).size.width / 2.2,
-                                  child: AspectRatio(
-                                    aspectRatio: 1,
-                                    child: PieChart(PieChartData(
-                                        sectionsSpace: 4,
-                                        sections: appsData.map((e) {
-                                          return PieChartSectionData(
-                                              radius: 35,
-                                              value: e[1].toDouble(),
-                                              titleStyle: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.white),
-                                              title: e[1].toString() + "%",
-                                              color: Color(e[0]));
-                                        }).toList())),
-                                  )),
+                  String idThisWeek = startOfThisWeek.day.toString() +
+                      startOfThisWeek.month.toString() +
+                      startOfThisWeek.add(Duration(days: 6)).day.toString() +
+                      startOfThisWeek.add(Duration(days: 6)).month.toString() +
+                      startOfThisWeek.year.toString();
 
-                              //Indicators
-                              //Indicators
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Container(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              margin: EdgeInsets.fromLTRB(
-                                                  0, 0, 5, 0),
-                                              height: 15,
-                                              width: 15,
-                                              color: Color(
-                                                  Shared.pieChartColor_blue),
-                                            ),
-                                            FutureBuilder(
-                                                future: _sharedData.getIcon(
-                                                    data[data.length - 1]
-                                                        .packageName),
-                                                builder: (context, snapshot) {
-                                                  if (snapshot
-                                                          .connectionState ==
-                                                      ConnectionState.done) {
-                                                    if (snapshot.hasData) {
-                                                      Application app = snapshot
-                                                          .data as Application;
-                                                      return Text(app.appName);
-                                                    } else {
-                                                      return Text(
-                                                          data[data.length - 1]
-                                                              .appName);
-                                                    }
-                                                  } else {
-                                                    return Text(
-                                                        data[data.length - 1]
-                                                            .appName);
-                                                  }
-                                                })
-                                          ],
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              margin: EdgeInsets.fromLTRB(
-                                                  0, 0, 5, 0),
-                                              height: 15,
-                                              width: 15,
-                                              color: Color(
-                                                  Shared.pieChartColor_violet),
-                                            ),
-                                            FutureBuilder(
-                                                future: _sharedData.getIcon(
-                                                    data[data.length - 2]
-                                                        .packageName),
-                                                builder: (context, snapshot) {
-                                                  if (snapshot
-                                                          .connectionState ==
-                                                      ConnectionState.done) {
-                                                    if (snapshot.hasData) {
-                                                      Application app = snapshot
-                                                          .data as Application;
-                                                      return Text(app.appName);
-                                                    } else {
-                                                      return Text(
-                                                          data[data.length - 2]
-                                                              .appName);
-                                                    }
-                                                  } else {
-                                                    return Text(
-                                                        data[data.length - 2]
-                                                            .appName);
-                                                  }
-                                                })
-                                          ],
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              margin: EdgeInsets.fromLTRB(
-                                                  0, 0, 5, 0),
-                                              height: 15,
-                                              width: 15,
-                                              color: Color(
-                                                  Shared.pieChartColor_red),
-                                            ),
-                                            FutureBuilder(
-                                                future: _sharedData.getIcon(
-                                                    data[data.length - 3]
-                                                        .packageName),
-                                                builder: (context, snapshot) {
-                                                  if (snapshot
-                                                          .connectionState ==
-                                                      ConnectionState.done) {
-                                                    if (snapshot.hasData) {
-                                                      Application app = snapshot
-                                                          .data as Application;
-                                                      return Text(app.appName);
-                                                    } else {
-                                                      return Text(
-                                                          data[data.length - 3]
-                                                              .appName);
-                                                    }
-                                                  } else {
-                                                    return Text(
-                                                        data[data.length - 3]
-                                                            .appName);
-                                                  }
-                                                })
-                                          ],
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              margin: EdgeInsets.fromLTRB(
-                                                  0, 0, 5, 0),
-                                              height: 15,
-                                              width: 15,
-                                              color: Color(
-                                                  Shared.pieChartColor_yellow),
-                                            ),
-                                            FutureBuilder(
-                                                future: _sharedData.getIcon(
-                                                    data[data.length - 4]
-                                                        .packageName),
-                                                builder: (context, snapshot) {
-                                                  if (snapshot
-                                                          .connectionState ==
-                                                      ConnectionState.done) {
-                                                    if (snapshot.hasData) {
-                                                      Application app = snapshot
-                                                          .data as Application;
-                                                      return Text(app.appName);
-                                                    } else {
-                                                      return Text(
-                                                          data[data.length - 4]
-                                                              .appName);
-                                                    }
-                                                  } else {
-                                                    return Text(
-                                                        data[data.length - 4]
-                                                            .appName);
-                                                  }
-                                                })
-                                          ],
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              margin: EdgeInsets.fromLTRB(
-                                                  0, 0, 5, 0),
-                                              height: 15,
-                                              width: 15,
-                                              color: Color(
-                                                  Shared.pieChartColor_green),
-                                            ),
-                                            Text(sharedInstance.dictionary[
-                                                        Shared.selectedLanguage]
-                                                    ?["Other"] ??
-                                                "")
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                  return Column(
+                    children: [
+                      Container(
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Color(Shared.colorSecondaryBackGround)),
+                          width: double.infinity,
+                          height: 50,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      if (!Shared.blockUser) {
+                                        setState(() {
+                                          startOfTheWeek = startOfTheWeek
+                                              .subtract(Duration(days: 7));
+                                        });
+                                      }
+                                    },
+                                    child: Icon(
+                                        Icons.arrow_back_ios_new_rounded,
+                                        color: Color(Shared.colorPrimaryText)),
                                   ),
                                 ),
-                              )
+                                Expanded(
+                                    flex: 8,
+                                    child: Center(
+                                        child: Text(
+                                      dateFormat.format(startOfTheWeek) +
+                                          " - " +
+                                          dateFormat.format(startOfTheWeek
+                                              .add(Duration(days: 6))) +
+                                          " : " +
+                                          startOfTheWeek.year.toString(),
+                                      style: TextStyle(
+                                          color:
+                                              Color(Shared.colorPrimaryText)),
+                                    ))),
+                                Expanded(
+                                  flex: 1,
+                                  child: GestureDetector(
+                                      onTap: () {
+                                        if (idThisWeek != idWeek &&
+                                            !Shared.blockUser) {
+                                          setState(() {
+                                            startOfTheWeek = startOfTheWeek
+                                                .add(Duration(days: 7));
+                                          });
+                                        }
+                                      },
+                                      child: Icon(
+                                        Icons.arrow_forward_ios_rounded,
+                                        color: (idThisWeek != idWeek)
+                                            ? Color(Shared.colorPrimaryText)
+                                            : Colors.grey,
+                                      )),
+                                ),
+                              ],
+                            ),
+                          )),
+                      SizedBox(
+                        height: 50,
+                      ),
+                      FutureBuilder(
+                          future: getWeeklyUsage(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.done) {
+                              if (snapshot.hasError) {
+                                return Center(
+                                  child: Text(
+                                    '${snapshot.error} occured',
+                                    style: TextStyle(fontSize: 18),
+                                  ),
+                                );
+                              } else if (snapshot.hasData) {
+                                List<WeeklyInfo> data = snapshot.data as List<WeeklyInfo>;
+                                data = filterUnique(data);
+                                Shared.blockUser = false;
+                                return Container(
+                                  margin: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                                  width: double.infinity,
+                                  height: 160,
+                                  child: AbsorbPointer(
+                                    absorbing: true,
+                                    child: LineChart(LineChartData(
+                                        gridData: FlGridData(
+                                          show: true,
+                                          getDrawingHorizontalLine: (value) {
+                                            return FlLine(
+                                                color: Color(
+                                                        Shared.colorPrimaryText)
+                                                    .withAlpha(128),
+                                                strokeWidth: 0.25);
+                                          },
+                                        ), //2mk6RpQJ
+                                        borderData: FlBorderData(
+                                          show: true,
+                                          border: Border(
+                                            bottom: BorderSide(
+                                                width: 0.25,
+                                                color: Color(
+                                                        Shared.colorPrimaryText)
+                                                    .withAlpha(128)),
+                                            top: BorderSide(
+                                                width: 0.25,
+                                                color: Color(
+                                                        Shared.colorPrimaryText)
+                                                    .withAlpha(128)),
+                                          ),
+                                        ),
+                                        //TO-DO make it dynamic
+                                        minX: -1,
+                                        maxX: 7,
+                                        minY: 0,
+                                        maxY: 8,
+                                        titlesData: LineTitles.getTitleData(),
+                                        lineBarsData: [
+                                          LineChartBarData(
+                                              spots: data.map((e) {
+                                                return FlSpot(
+                                                    e.pos, e.usageInHours / 3);
+                                              }).toList(),
+                                              dotData: FlDotData(getDotPainter:
+                                                  (FlSpot spot,
+                                                      double xPercentage,
+                                                      LineChartBarData bar,
+                                                      int index,
+                                                      {double? size}) {
+                                                return FlDotCirclePainter(
+                                                  radius: size,
+                                                  strokeWidth: 1.5,
+                                                  color: Color(Shared
+                                                      .colorSecondaryBackGround),
+                                                  strokeColor: Color(
+                                                      Shared.colorPrimaryText),
+                                                );
+                                              }),
+                                              isCurved: true,
+                                              belowBarData: BarAreaData(
+                                                  show: true,
+                                                  colors: [
+                                                    Color(Shared
+                                                            .colorPrimaryText)
+                                                        .withOpacity(0.05)
+                                                  ]),
+                                              colors: [
+                                                Color(Shared.colorPrimaryText)
+                                              ])
+                                        ])),
+                                  ),
+                                );
+                              } else {
+                                return Center(
+                                    child: Container(
+                                  height: 160,
+                                  child: Center(
+                                    child: Container(
+                                      height: 45,
+                                      width: 45,
+                                      child: CircularProgressIndicator(
+                                        backgroundColor: Color(
+                                            Shared.colorSecondaryBackGround),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Color(Shared.colorPrimaryText)),
+                                      ),
+                                    ),
+                                  ),
+                                ));
+                              }
+                            } else {
+                              return Center(
+                                  child: Container(
+                                height: 160,
+                                child: Center(
+                                  child: Container(
+                                    height: 45,
+                                    width: 45,
+                                    child: CircularProgressIndicator(
+                                      backgroundColor: Color(
+                                          Shared.colorSecondaryBackGround),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Color(Shared.colorPrimaryText)),
+                                    ),
+                                  ),
+                                ),
+                              ));
+                            }
+                          }),
+                    ],
+                  );
+                }),
+                Column(children: [
+                  //General Data
+                  //General Data
+                  SizedBox(
+                    height: 60,
+                  ),
+                  Divider(
+                    color: Color(Shared.colorPrimaryText).withAlpha(128),
+                    thickness: 1,
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  drawGenerals(
+                      sharedInstance.dictionary[Shared.selectedLanguage]
+                              ?["TODAY'S STATES"] ??
+                          "",
+                      Shared.getTodayCategory(),
+                      Shared.getTodayTimeOn()),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  drawGenerals(
+                      sharedInstance.dictionary[Shared.selectedLanguage]
+                              ?["AVERAGE THIS WEEK"] ??
+                          "",
+                      Shared.getAvarageThisWeekCategory(),
+                      Shared.getAvarageThisWeekTimeOn(0),),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Divider(
+                    color: Color(Shared.colorPrimaryText).withAlpha(128),
+                    thickness: 1,
+                  ),
+                ]),
+                FutureBuilder(
+                    future: _sharedData.getUsageStats(
+                        dayFilter.subtract(Duration(days: 1)), dayFilter, true),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        // If we got an error
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Text(
+                              '${snapshot.error} occured',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                          );
+                          // if we got our data
+                        } else if (snapshot.hasData) {
+                          final data = snapshot.data as List<AppUsageInfo>;
+                          int other = 100;
+                          List<List<int>> appsData = [];
+                          if (data.length != 0) {
+                            for (var i = 1; i < 5; i++) {
+                              other -= ((data[data.length - i].usage.inMinutes /
+                                          _sharedData.totalUsage) *
+                                      100)
+                                  .round();
+                            }
+                            appsData = [
+                              [
+                                Shared.pieChartColor_blue,
+                                ((data[data.length - 1].usage.inMinutes /
+                                            _sharedData.totalUsage) *
+                                        100)
+                                    .round()
+                              ],
+                              [
+                                Shared.pieChartColor_violet,
+                                ((data[data.length - 2].usage.inMinutes /
+                                            _sharedData.totalUsage) *
+                                        100)
+                                    .round()
+                              ],
+                              [
+                                Shared.pieChartColor_red,
+                                ((data[data.length - 3].usage.inMinutes /
+                                            _sharedData.totalUsage) *
+                                        100)
+                                    .round()
+                              ],
+                              [
+                                Shared.pieChartColor_yellow,
+                                ((data[data.length - 4].usage.inMinutes /
+                                            _sharedData.totalUsage) *
+                                        100)
+                                    .round()
+                              ],
+                              [Shared.pieChartColor_green, other]
+                            ];
+                          } else {
+                            return SizedBox();
+                          }
+                          return Column(
+                            children: [
+                              //Pie-Chart
+                              //Pie-Chart
+                              //TO-DO : make it dynamic
+                              SizedBox(
+                                height: 30,
+                              ),
+                              Row(
+                                children: [
+                                  Container(
+                                      width: MediaQuery.of(context).size.width /
+                                          2.2,
+                                      child: AspectRatio(
+                                        aspectRatio: 1,
+                                        child: PieChart(PieChartData(
+                                            sectionsSpace: 4,
+                                            sections: appsData.map((e) {
+                                              return PieChartSectionData(
+                                                  radius: 35,
+                                                  value: e[1].toDouble(),
+                                                  titleStyle: TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.white),
+                                                  title: e[1].toString() + "%",
+                                                  color: Color(e[0]));
+                                            }).toList())),
+                                      )),
+
+                                  //Indicators
+                                  //Indicators
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Container(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  margin: EdgeInsets.fromLTRB(
+                                                      0, 0, 5, 0),
+                                                  height: 15,
+                                                  width: 15,
+                                                  color: Color(Shared
+                                                      .pieChartColor_blue),
+                                                ),
+                                                FutureBuilder(
+                                                    future: _sharedData.getIcon(
+                                                        data[data.length - 1]
+                                                            .packageName),
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      if (snapshot
+                                                              .connectionState ==
+                                                          ConnectionState
+                                                              .done) {
+                                                        if (snapshot.hasData) {
+                                                          Application app =
+                                                              snapshot.data
+                                                                  as Application;
+                                                          return Text(
+                                                            app.appName,
+                                                            style: TextStyle(
+                                                                color: Color(Shared
+                                                                    .colorPrimaryText)),
+                                                          );
+                                                        } else {
+                                                          return Text(
+                                                              data[data.length -
+                                                                      1]
+                                                                  .appName,
+                                                              style: TextStyle(
+                                                                  color: Color(
+                                                                      Shared
+                                                                          .colorPrimaryText)));
+                                                        }
+                                                      } else {
+                                                        return Text(
+                                                            data[data.length -
+                                                                    1]
+                                                                .appName,
+                                                            style: TextStyle(
+                                                                color: Color(Shared
+                                                                    .colorPrimaryText)));
+                                                      }
+                                                    })
+                                              ],
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  margin: EdgeInsets.fromLTRB(
+                                                      0, 0, 5, 0),
+                                                  height: 15,
+                                                  width: 15,
+                                                  color: Color(Shared
+                                                      .pieChartColor_violet),
+                                                ),
+                                                FutureBuilder(
+                                                    future: _sharedData.getIcon(
+                                                        data[data.length - 2]
+                                                            .packageName),
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      if (snapshot
+                                                              .connectionState ==
+                                                          ConnectionState
+                                                              .done) {
+                                                        if (snapshot.hasData) {
+                                                          Application app =
+                                                              snapshot.data
+                                                                  as Application;
+                                                          return Text(
+                                                              app.appName,
+                                                              style: TextStyle(
+                                                                  color: Color(
+                                                                      Shared
+                                                                          .colorPrimaryText)));
+                                                        } else {
+                                                          return Text(
+                                                              data[data.length -
+                                                                      2]
+                                                                  .appName,
+                                                              style: TextStyle(
+                                                                  color: Color(
+                                                                      Shared
+                                                                          .colorPrimaryText)));
+                                                        }
+                                                      } else {
+                                                        return Text(
+                                                            data[data.length -
+                                                                    2]
+                                                                .appName,
+                                                            style: TextStyle(
+                                                                color: Color(Shared
+                                                                    .colorPrimaryText)));
+                                                      }
+                                                    })
+                                              ],
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  margin: EdgeInsets.fromLTRB(
+                                                      0, 0, 5, 0),
+                                                  height: 15,
+                                                  width: 15,
+                                                  color: Color(
+                                                      Shared.pieChartColor_red),
+                                                ),
+                                                FutureBuilder(
+                                                    future: _sharedData.getIcon(
+                                                        data[data.length - 3]
+                                                            .packageName),
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      if (snapshot
+                                                              .connectionState ==
+                                                          ConnectionState
+                                                              .done) {
+                                                        if (snapshot.hasData) {
+                                                          Application app =
+                                                              snapshot.data
+                                                                  as Application;
+                                                          return Text(
+                                                              app.appName,
+                                                              style: TextStyle(
+                                                                  color: Color(
+                                                                      Shared
+                                                                          .colorPrimaryText)));
+                                                        } else {
+                                                          return Text(
+                                                              data[data.length -
+                                                                      3]
+                                                                  .appName,
+                                                              style: TextStyle(
+                                                                  color: Color(
+                                                                      Shared
+                                                                          .colorPrimaryText)));
+                                                        }
+                                                      } else {
+                                                        return Text(
+                                                            data[data.length -
+                                                                    3]
+                                                                .appName,
+                                                            style: TextStyle(
+                                                                color: Color(Shared
+                                                                    .colorPrimaryText)));
+                                                      }
+                                                    })
+                                              ],
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  margin: EdgeInsets.fromLTRB(
+                                                      0, 0, 5, 0),
+                                                  height: 15,
+                                                  width: 15,
+                                                  color: Color(Shared
+                                                      .pieChartColor_yellow),
+                                                ),
+                                                FutureBuilder(
+                                                    future: _sharedData.getIcon(
+                                                        data[data.length - 4]
+                                                            .packageName),
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      if (snapshot
+                                                              .connectionState ==
+                                                          ConnectionState
+                                                              .done) {
+                                                        if (snapshot.hasData) {
+                                                          Application app =
+                                                              snapshot.data
+                                                                  as Application;
+                                                          return Text(
+                                                              app.appName,
+                                                              style: TextStyle(
+                                                                  color: Color(
+                                                                      Shared
+                                                                          .colorPrimaryText)));
+                                                        } else {
+                                                          return Text(
+                                                              data[data.length -
+                                                                      4]
+                                                                  .appName,
+                                                              style: TextStyle(
+                                                                  color: Color(
+                                                                      Shared
+                                                                          .colorPrimaryText)));
+                                                        }
+                                                      } else {
+                                                        return Text(
+                                                            data[data.length -
+                                                                    4]
+                                                                .appName,
+                                                            style: TextStyle(
+                                                                color: Color(Shared
+                                                                    .colorPrimaryText)));
+                                                      }
+                                                    })
+                                              ],
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  margin: EdgeInsets.fromLTRB(
+                                                      0, 0, 5, 0),
+                                                  height: 15,
+                                                  width: 15,
+                                                  color: Color(Shared
+                                                      .pieChartColor_green),
+                                                ),
+                                                Text(
+                                                    sharedInstance.dictionary[Shared
+                                                                .selectedLanguage]
+                                                            ?["Other"] ??
+                                                        "",
+                                                    style: TextStyle(
+                                                        color: Color(Shared
+                                                            .colorPrimaryText)))
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              ),
                             ],
-                          ),
-                        ],
-                      );
-                    } else
-                      return Center(
-                          child: Container(
-                        height: MediaQuery.of(context).size.height / 2,
-                        child: Center(
-                          child: Container(
-                            height: MediaQuery.of(context).size.width / 3,
-                            width: MediaQuery.of(context).size.width / 3,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(Shared.color_primary1)),
+                          );
+                        } else
+                          return Center(
+                              child: Container(
+                            height: MediaQuery.of(context).size.height / 2,
+                            child: Center(
+                              child: Container(
+                                height: 45,
+                                width: 45,
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Color(Shared.colorPrimaryText)),
+                                ),
+                              ),
+                            ),
+                          ));
+                      } else
+                        return Center(
+                            child: Container(
+                          height: MediaQuery.of(context).size.height / 2,
+                          child: Center(
+                            child: Container(
+                              height: 45,
+                              width: 45,
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(Shared.colorPrimaryText)),
+                              ),
                             ),
                           ),
-                        ),
-                      ));
-                  } else
-                    return Center(
-                        child: Container(
-                      height: MediaQuery.of(context).size.height / 2,
-                      child: Center(
-                        child: Container(
-                          height: MediaQuery.of(context).size.width / 3,
-                          width: MediaQuery.of(context).size.width / 3,
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(Shared.color_primary1)),
-                          ),
-                        ),
-                      ),
-                    ));
-                }),
-          ],
-        ),
-      ),
-    ));
+                        ));
+                    }),
+              ],
+            ),
+          ),
+        ));
   }
 
   Column drawGenerals(String title, Future<String?> futureCategory,
@@ -863,7 +937,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fontSize: 18,
               fontWeight: FontWeight.w600,
               fontFamily: "Yu Gothic UI",
-              color: Color(Shared.color_primary1)),
+              color: Color(Shared.colorPrimaryText)),
         ),
         SizedBox(
           height: 10,
@@ -875,7 +949,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Container(
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    color: Color(Shared.color_primary2)),
+                    color: Color(Shared.colorSecondaryBackGround)),
                 height: 70,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -895,7 +969,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               fontFamily: "Yu Gothic UI",
-                              color: Color(Shared.color_primary1)),
+                              color: Color(Shared.colorPrimaryText)),
                         ),
                         FutureBuilder(
                             future: futureCategory,
@@ -909,20 +983,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                         fontFamily: "Yu Gothic UI",
-                                        color: Color(Shared.color_secondary2)),
+                                        color: Color(Shared.colorPrimaryText)),
                                   );
                                 } else {
                                   return Center(
                                       child: Container(
-                                    height: 25,
+                                    height: 15,
                                     child: Center(
                                       child: Container(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                  Color(Shared.color_primary1)),
+                                        width: 50,
+                                        height: 6,
+                                        child: LinearProgressIndicator(
+                                          backgroundColor: Shared.darkThemeOn
+                                              ? Colors.grey[700]
+                                              : Colors.grey[300],
+                                          valueColor: AlwaysStoppedAnimation<
+                                                  Color>(
+                                              Color(Shared.colorPrimaryText)),
                                         ),
                                       ),
                                     ),
@@ -931,15 +1008,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               } else {
                                 return Center(
                                     child: Container(
-                                  height: 25,
+                                  height: 15,
                                   child: Center(
                                     child: Container(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
+                                      width: 50,
+                                      height: 6,
+                                      child: LinearProgressIndicator(
+                                        backgroundColor: Shared.darkThemeOn
+                                            ? Colors.grey[700]
+                                            : Colors.grey[300],
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                                Color(Shared.color_primary1)),
+                                                Color(Shared.colorPrimaryText)),
                                       ),
                                     ),
                                   ),
@@ -960,7 +1040,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Container(
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    color: Color(Shared.color_primary2)),
+                    color: Color(Shared.colorSecondaryBackGround)),
                 height: 70,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -980,7 +1060,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               fontFamily: "Yu Gothic UI",
-                              color: Color(Shared.color_primary1)),
+                              color: Color(Shared.colorPrimaryText)),
                         ),
                         FutureBuilder(
                             future: futureTimeOn,
@@ -994,20 +1074,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                         fontFamily: "Yu Gothic UI",
-                                        color: Color(Shared.color_secondary2)),
+                                        color: Color(Shared.colorPrimaryText)),
                                   );
                                 } else {
                                   return Center(
                                       child: Container(
-                                    height: 25,
+                                    height: 15,
                                     child: Center(
                                       child: Container(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                  Color(Shared.color_primary1)),
+                                        width: 60,
+                                        height: 6,
+                                        child: LinearProgressIndicator(
+                                          backgroundColor: Shared.darkThemeOn
+                                              ? Colors.grey[700]
+                                              : Colors.grey[300],
+                                          valueColor: AlwaysStoppedAnimation<
+                                                  Color>(
+                                              Color(Shared.colorPrimaryText)),
                                         ),
                                       ),
                                     ),
@@ -1016,15 +1099,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               } else {
                                 return Center(
                                     child: Container(
-                                  height: 25,
+                                  height: 15,
                                   child: Center(
                                     child: Container(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
+                                      width: 60,
+                                      height: 6,
+                                      child: LinearProgressIndicator(
+                                        backgroundColor: Shared.darkThemeOn
+                                            ? Colors.grey[700]
+                                            : Colors.grey[300],
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                                Color(Shared.color_primary1)),
+                                                Color(Shared.colorPrimaryText)),
                                       ),
                                     ),
                                   ),
@@ -1065,7 +1151,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               text,
               style: TextStyle(
                 color: id == selectedFilterId
-                    ? Color(Shared.color_primary1)
+                    ? Color(Shared.colorPrimaryText)
                     : Colors.white,
               ),
             )),
@@ -1086,6 +1172,10 @@ class LineTitles {
             rotateAngle: -45,
             showTitles: true,
             margin: 15,
+            getTextStyles: (value) {
+              return TextStyle(
+                  color: Color(Shared.colorPrimaryText).withAlpha(160));
+            },
             getTitles: (value) {
               switch (value.toInt()) {
                 case 0:
@@ -1124,6 +1214,10 @@ class LineTitles {
             reservedSize: 15,
             showTitles: true,
             margin: 10,
+            getTextStyles: (value) {
+              return TextStyle(
+                  color: Color(Shared.colorPrimaryText).withAlpha(160));
+            },
             getTitles: (value) {
               return (3 * value).toInt().toString() + "h";
             }));

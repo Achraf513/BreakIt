@@ -3,6 +3,7 @@ import 'package:break_it/Shared/Shared.dart';
 import 'package:flutter/material.dart';
 import 'package:device_apps/device_apps.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 class ActivitiesScreen extends StatefulWidget {
   const ActivitiesScreen({Key? key}) : super(key: key);
@@ -14,8 +15,16 @@ class ActivitiesScreen extends StatefulWidget {
 class _ActivitiesScreenState extends State<ActivitiesScreen> {
   final _sharedData = SharedData();
   DateTime dayFilter= DateTime.now().subtract(Duration(hours: DateTime.now().hour, minutes: DateTime.now().minute));
-  DateFormat dateFormat = DateFormat("yyyy-MM-dd");
-  
+  late DateFormat dateFormat ;
+  TextEditingController searchBarController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    initializeDateFormatting();
+    dateFormat = DateFormat("dd MMMM yyyy","en");
+  }
+
   String? getCategory(
       ApplicationCategory appCategory, bool isSysApp, bool forDataBase) {
     if (!forDataBase) {
@@ -70,10 +79,39 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
     }
   }
 
+   List<AppDailyInfo> filterUnique(List<AppDailyInfo> data){
+    Map<String,AppDailyInfo> newData = {};
+    for(AppDailyInfo appDailyInfo in data){
+        if(newData.keys.contains(appDailyInfo.appPackageName)){
+          continue;
+        }
+        newData[appDailyInfo.appPackageName] = appDailyInfo;
+      }
+      return newData.values.toList();
+    }
+
   @override
   Widget build(BuildContext context) {
+    String local = "en";
+    switch(Shared.selectedLanguage){
+      case "English":
+        local = "en";
+        break;
+      case "Dutch":
+        local = "de";
+        break;
+      case "French":
+        local = "fr";
+        break;
+      case "Spanish":
+        local = "sp";
+        break;
+    }
+    dateFormat = DateFormat("dd MMMM yyyy",local);
+    Shared.blockUser = true;
     _sharedData.totalUsage = 0;
     return Scaffold(
+        backgroundColor: Color(Shared.colorPrimaryBackGround),
         body: SingleChildScrollView(
             child: Column(
               children: [
@@ -81,20 +119,26 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                   height: 50,
                   margin: EdgeInsets.fromLTRB(20, 20, 20, 0),
                   child: TextFormField(
+                    controller: searchBarController,
+                    onChanged: (value){
+                      if(value.isNotEmpty)
+                        setState(() {
+                        });
+                    },
                     decoration: InputDecoration(
                       enabledBorder:  OutlineInputBorder(borderRadius: const BorderRadius.all(
-                          const Radius.circular(20.0),
-                        ),borderSide : BorderSide(color: Color(Shared.color_primary1), width: 0.5)),
+                          const Radius.circular(10.0),
+                        ),borderSide : BorderSide(color: Color(Shared.colorPrimaryText), width: 0.5)),
                       focusedBorder: OutlineInputBorder(borderRadius: const BorderRadius.all(
-                          const Radius.circular(20.0),
-                        ),borderSide : BorderSide(color: Color(Shared.color_primary1), width: 1)),
+                          const Radius.circular(10.0),
+                        ),borderSide : BorderSide(color: Color(Shared.colorPrimaryText), width: 1)),
                       filled: true,
-                      prefixIcon: Icon(Icons.search_rounded, color: Color(Shared.color_primary1),),
-                      fillColor: Colors.white,
+                      prefixIcon: Icon(Icons.search_rounded, color: Color(Shared.colorPrimaryText),),
+                      fillColor: Color(Shared.colorPrimaryBackGround),
                       hintText: SharedData().dictionary[Shared.selectedLanguage]?["Search by application"]??"Search by application",
                       hintStyle: TextStyle(
                         fontSize: 15,
-                        color: Color(Shared.color_primary1).withAlpha(128)
+                        color: Color(Shared.colorPrimaryText).withAlpha(128)
                       )
                     ),
                   ),
@@ -103,7 +147,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                   margin: EdgeInsets.fromLTRB(20, 10, 20, 5),
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
-                      color: Color(Shared.color_primary2)),
+                      color: Color(Shared.colorSecondaryBackGround)),
                   width: double.infinity,
                   height: 50,
                   child: Padding(
@@ -113,7 +157,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                         Expanded(
                           flex: 1,
                           child: GestureDetector(
-                            child:Icon(Icons.arrow_back_ios_new_rounded,color: dateFormat.format(dayFilter.subtract(Duration(days: 1)))!=dateFormat.format(DateTime.now().subtract(Duration(days: 6)))?Color(Shared.color_primary1):Colors.grey,),
+                            child:Icon(Icons.arrow_back_ios_new_rounded,color: dateFormat.format(dayFilter.subtract(Duration(days: 1)))!=dateFormat.format(DateTime.now().subtract(Duration(days: 6)))?Color(Shared.colorPrimaryText):Colors.grey,),
                             onTap: (){
                               if(dateFormat.format(dayFilter.subtract(Duration(days: 1)))!=dateFormat.format(DateTime.now().subtract(Duration(days: 6)))){ // add only 7 days possible rotation
                                 setState(() {
@@ -126,15 +170,15 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                         Expanded(
                             flex: 8,
                             child: Center(child: Text(
-                              dateFormat.format(dayFilter.subtract(Duration(days: 1))),
-                              style: TextStyle(color: Color(Shared.color_primary1)),
+                              dateFormat.format(dayFilter),
+                              style: TextStyle(color: Color(Shared.colorPrimaryText)),
                             ))),
                         Expanded(
                           flex: 1,
                           child: GestureDetector(
-                            child: Icon(Icons.arrow_forward_ios_rounded,color: dateFormat.format(dayFilter.subtract(Duration(days: 1)))==dateFormat.format(DateTime.now())?Colors.grey:Color(Shared.color_primary1)),
+                            child: Icon(Icons.arrow_forward_ios_rounded,color: dateFormat.format(dayFilter)==dateFormat.format(DateTime.now())?Colors.grey:Color(Shared.colorPrimaryText)),
                             onTap: (){
-                              if(dateFormat.format(dayFilter.subtract(Duration(days: 1)))!=dateFormat.format(DateTime.now())){
+                              if(dateFormat.format(dayFilter)!=dateFormat.format(DateTime.now())){
                                 setState(() {
                                   dayFilter = dayFilter.add(Duration(days: 1));
                                 });
@@ -161,10 +205,12 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
 
                           // if we got our data
                         } else if (snapshot.hasData) {
+                          Shared.blockUser = false;
                           // Extracting data from snapshot object
-                          final data = snapshot.data as List<AppDailyInfo>;
+                          List<AppDailyInfo> data = snapshot.data as List<AppDailyInfo>;
+                          data = filterUnique(data);
                           return Column(
-                              children: data.reversed.where((element) => element.usageInMin>0)
+                              children: data.reversed.where((element) => (element.usageInMin>0 && searchBarController.text.isEmpty?true:(element.appName.contains(searchBarController.text) || element.appPackageName.contains(searchBarController.text))))
                                   .map(
                                     (e) => FutureBuilder(
                                         future: _sharedData.getIcon(e.appPackageName),
@@ -186,7 +232,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                   borderRadius:
                                                       BorderRadius.circular(10),
                                                   color: Color(
-                                                      Shared.color_primary2),
+                                                      Shared.colorSecondaryBackGround),
                                                 ),
                                                 padding: const EdgeInsets.symmetric(
                                                     horizontal: 15, vertical: 10),
@@ -223,7 +269,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                                     style: TextStyle(
                                                                       fontSize: 15,
                                                                       fontWeight: FontWeight.w600,
-                                                                      color: Color(Shared.color_primary1)
+                                                                      color: Color(Shared.colorPrimaryText)
                                                                     )),
                                                               ),
                                                             ],
@@ -244,33 +290,37 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                               borderRadius:
                                                                   BorderRadius
                                                                       .circular(10),
-                                                              color: Colors
+                                                              color: e.comparisonPerc!=0?(e.comparisonPerc<0?Colors
                                                                   .lightGreen
-                                                                  .withOpacity(0.5),
+                                                                  .withOpacity(0.3):
+                                                                  Colors
+                                                                  .red
+                                                                  .withOpacity(0.2)):Colors.grey.withOpacity(0.3),
                                                             ),
                                                             child: Row(
                                                               mainAxisAlignment:
                                                                   MainAxisAlignment
                                                                       .center,
                                                               children: [
-                                                                Icon(
+                                                                Icon(e.comparisonPerc!=0?(e.comparisonPerc<0?
                                                                   Icons
-                                                                      .arrow_downward_rounded,
-                                                                  color: Colors
+                                                                      .arrow_downward_rounded:Icons
+                                                                      .arrow_upward_rounded):Icons.equalizer,
+                                                                  color: e.comparisonPerc!=0?(e.comparisonPerc<0?Colors
                                                                           .lightGreen[
-                                                                      700],
+                                                                      600]:Colors.red):Colors.grey,
                                                                       size: 15,
                                                                 ),
-                                                                Text("12%",
+                                                                Text(e.comparisonPerc>999?"999":e.comparisonPerc.toString()+"%",
                                                                     style:
                                                                         TextStyle(
                                                                           fontSize: 12,
                                                                       fontWeight:
                                                                           FontWeight
                                                                               .w600,
-                                                                      color: Colors
+                                                                      color:  e.comparisonPerc!=0?(e.comparisonPerc<0? Colors
                                                                               .lightGreen[
-                                                                          700],
+                                                                          600]:Colors.red):Colors.grey,
                                                                     ))
                                                               ],
                                                             ),
@@ -292,7 +342,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                               text: TextSpan(
                                                                 text:  (SharedData().dictionary[Shared.selectedLanguage]?["Usage Percentage"]??"Usage Percentage")+" : ",
                                                                 style: TextStyle(
-                                                                  color: Color(Shared.color_primary1),
+                                                                  color: Color(Shared.colorPrimaryText),
                                                                   fontSize: 12,
                                                                 ),
                                                                 children: <TextSpan>[
@@ -310,7 +360,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                               text: TextSpan(
                                                                 text: (SharedData().dictionary[Shared.selectedLanguage]?["Used For"]??"Used For") + " : ",
                                                                 style: TextStyle(
-                                                                  color: Color(Shared.color_primary1),
+                                                                  color: Color(Shared.colorPrimaryText),
                                                                   fontSize: 12,
                                                                 ),
                                                                 children: <TextSpan>[
@@ -331,7 +381,7 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                                                               text: TextSpan(
                                                                 text:  (SharedData().dictionary[Shared.selectedLanguage]?["Category"]??"Category")+" : ",
                                                                 style: TextStyle(
-                                                                  color: Color(Shared.color_primary1),
+                                                                  color: Color(Shared.colorPrimaryText),
                                                                   fontSize: 12,
                                                                 ),
                                                                 children: <TextSpan>[
@@ -359,11 +409,12 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                             height: MediaQuery.of(context).size.height / 2,
                             child: Center(
                               child: Container(
-                                height: MediaQuery.of(context).size.width / 3,
-                                width: MediaQuery.of(context).size.width / 3,
+                                height: 45,
+                                width: 45,
                                 child: CircularProgressIndicator(
+                                backgroundColor: Color(Shared.colorSecondaryBackGround),
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                      Color(Shared.color_primary1)),
+                                      Color(Shared.colorPrimaryText)),
                                 ),
                               ),
                             ),
@@ -374,11 +425,12 @@ class _ActivitiesScreenState extends State<ActivitiesScreen> {
                           height: MediaQuery.of(context).size.height / 2,
                           child: Center(
                             child: Container(
-                              height: MediaQuery.of(context).size.width / 3,
-                              width: MediaQuery.of(context).size.width / 3,
+                              height: 45,
+                              width: 45,
                               child: CircularProgressIndicator(
+                                backgroundColor: Color(Shared.colorSecondaryBackGround),
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                    Color(Shared.color_primary1)),
+                                    Color(Shared.colorPrimaryText)),
                               ),
                             ),
                           ),

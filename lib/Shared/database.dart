@@ -1,5 +1,7 @@
+import 'package:break_it/Models/RuleModel.dart';
 import 'package:break_it/Models/dailyCategory.dart';
 import 'package:break_it/Models/generalData.dart';
+import 'package:break_it/Shared/Shared.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:break_it/Models/Appdaily.dart';
 import 'package:break_it/Models/Weekly.dart';
@@ -64,6 +66,19 @@ CREATE TABLE $tableDailyCategory (
   ${DailyCategoryFields.usageInMin} $intType
 )
 """);
+
+    await db.execute("""
+CREATE TABLE $tableRuleModel (
+  ${RuleModelFields.id} $idType,
+  ${RuleModelFields.appName} $stringType,
+  ${RuleModelFields.appPackageName} $stringType,
+  ${RuleModelFields.usageLimitInH} $intType,
+  ${RuleModelFields.usageLimitInMin} $intType,
+  ${RuleModelFields.notificationFrequency} $intType,
+  ${RuleModelFields.todaysNotifications} $intType,
+  ${RuleModelFields.lastDaysNotificationId} $stringType
+)
+""");
     //creating last check Activities
     await db.insert(
         tableGeneraldata,
@@ -78,6 +93,18 @@ CREATE TABLE $tableDailyCategory (
                 title: "LastCheckDashBoard",
                 data: DateTime.now().subtract(Duration(minutes: 10)).toString())
             .toJson());
+    //creating notifyTodayExceededAvarege
+    await db.insert(tableGeneraldata,
+        Generaldata(title: "NotifyTodayExceededAvarege", data: "false").toJson());
+    //creating NotifyEarlier
+    await db.insert(tableGeneraldata,
+        Generaldata(title: "NotifyEarlier", data: "false").toJson());
+    //creating DarkModeOn
+    await db.insert(tableGeneraldata,
+        Generaldata(title: "DarkModeOn", data: "false").toJson());
+    //creating SelectedLanguage
+    await db.insert(tableGeneraldata,
+        Generaldata(title: "SelectedLanguage", data: "English").toJson());
     //creating AverageCategory
     await db.insert(tableGeneraldata,
         Generaldata(title: "AverageCategory", data: "None").toJson());
@@ -113,6 +140,12 @@ CREATE TABLE $tableDailyCategory (
     return weeklyInfo.copy(id: id);
   }
 
+  Future<RuleModel> createRule(RuleModel ruleModel) async {
+    final db = await instance.database;
+    final id = await db.insert(tableRuleModel, ruleModel.toJson());
+    return ruleModel.copy(id: id);
+  }
+
   Future<List<AppDailyInfo>?> readAppDailyInfo(DateTime day) async {
     final String idDay =
         day.year.toString() + day.month.toString() + day.day.toString();
@@ -138,6 +171,45 @@ CREATE TABLE $tableDailyCategory (
         orderBy: "${WeeklyInfoFields.pos} ASC");
     if (results.isNotEmpty) {
       return results.map((json) => WeeklyInfo.fromJson(json)).toList();
+    } else {
+      return null;
+    }
+  }
+
+  Future<List<RuleModel>> readRules() async {
+    final db = await instance.database;
+    final results = await db.query(tableRuleModel,
+        columns: RuleModelFields.values,
+        orderBy: "${RuleModelFields.usageLimitInH} DESC");
+    if (results.isNotEmpty) {
+      return results.map((json) => RuleModel.fromJson(json)).toList();
+    } else {
+      return [];
+    }
+  }
+
+  Future<List<RuleModel>> readRulesWithNotifLeft() async {
+    final db = await instance.database;
+    final results = await db.query(tableRuleModel,
+        columns: RuleModelFields.values,
+        where: "${RuleModelFields.todaysNotifications} > 0",
+        orderBy: "${RuleModelFields.usageLimitInH} DESC");
+    if (results.isNotEmpty) {
+      return results.map((json) => RuleModel.fromJson(json)).toList();
+    } else {
+      return [];
+    }
+  }
+
+  Future<RuleModel?> getRuleId(RuleModel ruleModel) async {
+    final db = await instance.database;
+    final results = await db.query(tableRuleModel,
+        columns: RuleModelFields.values,
+        where: "${RuleModelFields.appName} = ? AND ${RuleModelFields.appPackageName} = ?",
+        whereArgs: [ruleModel.appName, ruleModel.appPackageName],
+        orderBy: "${RuleModelFields.usageLimitInH} DESC");
+    if (results.isNotEmpty) {
+      return RuleModel.fromJson(results.first);
     } else {
       return null;
     }
@@ -225,8 +297,7 @@ ORDER BY ${DailyCategoryFields.usageInMin} DESC
     }
   }
 
-  Future<Generaldata?> getPermessionGranted() async {
-    final String title = "PermessionGranted";
+  Future<Generaldata?> getGeneralData(String title) async {
     final db = await instance.database;
     final results = await db.query(
       tableGeneraldata,
@@ -240,38 +311,8 @@ ORDER BY ${DailyCategoryFields.usageInMin} DESC
       return null;
     }
   }
-
-  Future<Generaldata?> getLastCheckActivities() async {
-    final String title = "LastCheckActivities";
-    final db = await instance.database;
-    final results = await db.query(
-      tableGeneraldata,
-      columns: GeneraldataFields.values,
-      where: "${GeneraldataFields.title} = ?",
-      whereArgs: [title],
-    );
-    if (results.isNotEmpty) {
-      return Generaldata.fromJson(results.first);
-    } else {
-      return null;
-    }
-  }
-
-  Future<Generaldata?> getLastCheckDashBoard() async {
-    final String title = "LastCheckDashBoard";
-    final db = await instance.database;
-    final results = await db.query(
-      tableGeneraldata,
-      columns: GeneraldataFields.values,
-      where: "${GeneraldataFields.title} = ?",
-      whereArgs: [title],
-    );
-    if (results.isNotEmpty) {
-      return Generaldata.fromJson(results.first);
-    } else {
-      return null;
-    }
-  }
+ 
+ 
 
   Future<int> updateAppDailyInfo(AppDailyInfo appDailyInfo) async {
     final db = await instance.database;
@@ -305,7 +346,7 @@ ORDER BY ${DailyCategoryFields.usageInMin} DESC
 
   Future updatePermessionGranted() async {
     final db = await instance.database;
-    final Generaldata? generalData = await getPermessionGranted();
+    final Generaldata? generalData = await getGeneralData("PermessionGranted");
     if (generalData != null) {
       Generaldata newGeneralData = generalData.copy(data: "true");
       return db.update(tableGeneraldata, newGeneralData.toJson(),
@@ -315,7 +356,7 @@ ORDER BY ${DailyCategoryFields.usageInMin} DESC
 
   Future updateLastCheckActivities() async {
     final db = await instance.database;
-    final Generaldata? generalData = await getLastCheckActivities();
+    final Generaldata? generalData = await getGeneralData("LastCheckActivities");
     if (generalData != null) {
       Generaldata newGeneralData =
           generalData.copy(data: DateTime.now().toString());
@@ -324,9 +365,55 @@ ORDER BY ${DailyCategoryFields.usageInMin} DESC
     }
   }
 
+  
+  Future updateDarkModeOn() async {
+    final db = await instance.database;
+    final Generaldata? generalData = await getGeneralData("DarkModeOn");
+    if (generalData != null) {
+      Generaldata newGeneralData =
+          generalData.copy(data: Shared.darkThemeOn.toString());
+      return db.update(tableGeneraldata, newGeneralData.toJson(),
+          where: "${GeneraldataFields.id} = ?", whereArgs: [newGeneralData.id]);
+    }
+  }
+
+ Future updateSelectedLanguage() async {
+    final db = await instance.database;
+    final Generaldata? generalData = await getGeneralData("SelectedLanguage");
+    if (generalData != null) {
+      Generaldata newGeneralData =
+          generalData.copy(data: Shared.selectedLanguage.toString());
+      return db.update(tableGeneraldata, newGeneralData.toJson(),
+          where: "${GeneraldataFields.id} = ?", whereArgs: [newGeneralData.id]);
+    }
+  }
+
+  
+ Future updateNotifyEarlier() async {
+    final db = await instance.database;
+    final Generaldata? generalData = await getGeneralData("NotifyEarlier");
+    if (generalData != null) {
+      Generaldata newGeneralData =
+          generalData.copy(data: Shared.notifyEarlier.toString());
+      return db.update(tableGeneraldata, newGeneralData.toJson(),
+          where: "${GeneraldataFields.id} = ?", whereArgs: [newGeneralData.id]);
+    }
+  }
+   
+ Future updateNotifyTodayExceededAvarege() async {
+    final db = await instance.database;
+    final Generaldata? generalData = await getGeneralData("NotifyTodayExceededAvarege");
+    if (generalData != null) {
+      Generaldata newGeneralData =
+          generalData.copy(data: Shared.notifyTodayExceededAvarege.toString());
+      return db.update(tableGeneraldata, newGeneralData.toJson(),
+          where: "${GeneraldataFields.id} = ?", whereArgs: [newGeneralData.id]);
+    }
+  }
+
   Future updateLastCheckDashBoard() async {
     final db = await instance.database;
-    final Generaldata? generalData = await getLastCheckDashBoard();
+    final Generaldata? generalData = await getGeneralData("LastCheckDashBoard");
     if (generalData != null) {
       Generaldata newGeneralData =
           generalData.copy(data: DateTime.now().toString());
@@ -339,6 +426,12 @@ ORDER BY ${DailyCategoryFields.usageInMin} DESC
     final db = await instance.database;
     return db.update(tableWeeklyInfo, weeklyInfo.toJson(),
         where: "${WeeklyInfoFields.id} = ?", whereArgs: [weeklyInfo.id]);
+  }
+
+  Future<int> updateRule(RuleModel ruleModel) async {
+    final db = await instance.database;
+    return db.update(tableRuleModel, ruleModel.toJson(),
+        where: "${RuleModelFields.id} = ?", whereArgs: [ruleModel.id]);
   }
 
   Future<int> deleteAppDailyInfo(int id) async {
@@ -360,6 +453,12 @@ ORDER BY ${DailyCategoryFields.usageInMin} DESC
     final db = await instance.database;
     return db.delete(tableWeeklyInfo,
         where: "${WeeklyInfoFields.id} = ?", whereArgs: [id]);
+  }
+
+  Future<int> deleteRule(int id) async {
+    final db = await instance.database;
+    return db.delete(tableRuleModel,
+        where: "${RuleModelFields.id} = ?", whereArgs: [id]);
   }
 
   Future close() async {

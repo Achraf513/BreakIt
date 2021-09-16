@@ -23,7 +23,7 @@ class GrantPermession extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: DataBase.instance.getPermessionGranted(),
+        future: DataBase.instance.getGeneralData("PermessionGranted"),
         builder: (context, snapshot) {
           if(snapshot.connectionState==ConnectionState.done){
             if(snapshot.hasData){
@@ -44,7 +44,7 @@ class GrantPermession extends StatelessWidget {
                               "Welcome to BreakIt",
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                  color: Color(Shared.color_primary1),
+                                  color: Color(Shared.colorPrimaryText),
                                   fontWeight: FontWeight.w400,
                                   fontSize: 25),
                             ),
@@ -55,7 +55,7 @@ class GrantPermession extends StatelessWidget {
                               "In order to use the app, you need to grant it the permession to access the packages usage states.\nClick the 'Allow' button and select BreakIt, then grant it the permession.",
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                  color: Color(Shared.color_primary1),
+                                  color: Color(Shared.colorPrimaryText),
                                   fontWeight: FontWeight.w400,
                                   fontSize: 15),
                             ),
@@ -67,7 +67,7 @@ class GrantPermession extends StatelessWidget {
                               height: 50,
                               decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(25),
-                                  color: Color(Shared.color_primary1)),
+                                  color: Color(Shared.colorPrimaryText)),
                               child: TextButton(
                                 onPressed: () async {
                                   List<AppUsageInfo> infos = await askForPermession();
